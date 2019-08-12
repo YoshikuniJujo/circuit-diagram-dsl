@@ -33,7 +33,7 @@ dependencies:
 library:
   source-dirs: src
   exposed-modules:
-    - Circuit.Diagram
+    - Circuit.DiagramDsl
 
 tests:
   circuit-diagram-test:
