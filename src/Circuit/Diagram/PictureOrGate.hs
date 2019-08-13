@@ -9,7 +9,7 @@ import Diagrams.Backend.SVG.CmdLine
 
 orGateD :: Diagram B
 orGateD = moveTo ((- 3) ^& 0) (orGate ||| line' 0.2)
-	`withEnvelope'` (rect 3 3 :: Diagram B)
+	`withEnvelope'` (moveTo ((- 1.5) ^& 0) $ rect 3 3 :: Diagram B)
 
 line2 :: Diagram B
 line2 = (strokeT (fromOffsets [zero & _x .~ 0.55]) # lwL 0.08)
