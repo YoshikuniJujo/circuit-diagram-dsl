@@ -138,7 +138,9 @@ newElement :: ElementIdable ied => ied -> ElementDiagram -> Pos -> DiagramMapM L
 newElement eid e p = maybe (lift $ Left "Oops!") return =<< putElement eid e p
 
 putElement0 :: ElementIdable eid => eid -> ElementDiagram -> DiagramMapM (Maybe LinePos)
-putElement0 eid e = putElementGen True eid e 2 Nothing
+putElement0 eid e = do
+	sp <- getSpace
+	putElementGen True eid e sp Nothing
 
 putElement :: ElementIdable eid => eid -> ElementDiagram -> Pos -> DiagramMapM (Maybe LinePos)
 putElement eid e (Pos x y) = putElementGen False eid e x (Just y)
@@ -152,9 +154,10 @@ putElementGen b eidg e x my_ = do
 			case my_ of
 				Just y -> bool Nothing my_ . ((y > (w - 1) `div` 2) &&) <$> placeable e (Pos x y)
 				Nothing -> return my_
+		sp <- getSpace
 		stt <- get
 		let	sp = space stt
-			y = fromMaybe 1 $ place stt !? x
+			y = fromMaybe sp $ place stt !? x
 			p = Pos x $ fromMaybe y my
 	
 			dm = diagramMap stt
