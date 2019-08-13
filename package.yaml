@@ -90,3 +90,12 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - circuit-diagram-dsl
+  tryCrossBug:
+    main:                tryCrossBug.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - circuit-diagram-dsl

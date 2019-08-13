@@ -154,7 +154,6 @@ putElementGen b eidg e x my_ = do
 			case my_ of
 				Just y -> bool Nothing my_ . ((y > (w - 1) `div` 2) &&) <$> placeable e (Pos x y)
 				Nothing -> return my_
-		sp <- getSpace
 		stt <- get
 		let	sp = space stt
 			y = fromMaybe sp $ place stt !? x
@@ -252,31 +251,33 @@ instance AStar DiagramMapAStar where
 	type AStarNode DiagramMapAStar = Pos
 	startNode = startLine
 	isEndNode = flip elem . endLine
-	nextNodes = (((, 1) <$>) .) . nextPosDiagramMap
+	nextNodes = nextPosDiagramMap
 	distToEnd = distance . endLine
 
-nextPosDiagramMap :: DiagramMapAStar -> Pos -> [Pos]
-nextPosDiagramMap dma (Pos x0 y0) = [ p |
+nextPosDiagramMap :: DiagramMapAStar -> Pos -> [(Pos, Dist)]
+nextPosDiagramMap dma (Pos x0 y0) = [ pd |
 	p@(Pos x y) <- [Pos (x0 - 1) y0, Pos (x0 + 1) y0, Pos x0 (y0 - 1), Pos x0 (y0 + 1)],
 	0 <= x, x < w, 0 <= y, y < h,
-	isEndNode dma (Pos x y) || y == y0 && checkHorizontal l p || x == x0 && checkVertical l p ]
+	pd <-	[ (p, 1) | isEndNode dma p ] ++
+		[ pd' | y == y0, pd' <- maybeToList $ horizontal l (x - x0) p ] ++
+		[ pd' | x == x0, pd' <- maybeToList $ vertical l (y - y0) p ] ]
 	where
 	dm = diagramMapA dma
 	l = layout dm
 	w = width dm
 	h = height dm
 
-checkHorizontal, checkVertical :: Map Pos ElementDiagram -> Pos -> Bool
-checkHorizontal l p = case l !? p of
-	Just VLine -> True
-	Just _ -> False
-	Nothing -> True
+horizontal, vertical :: Map Pos ElementDiagram -> Int -> Pos -> Maybe (Pos, Dist)
+horizontal l d p@(Pos x y) = case l !? p of
+	Just VLine -> Just (Pos (x + d) y, 2)
+	Just _ -> Nothing
+	Nothing -> Just (p, 1)
 
-checkVertical l p = case  l !? p of
-	Just HLine -> True
-	Just EndHLine -> True
-	Just _ -> False
-	Nothing -> True
+vertical l d p@(Pos x y) = case  l !? p of
+	Just HLine -> Just (Pos x (y + d), 2)
+	Just EndHLine -> Just (Pos x (y + d), 2)
+	Just _ -> Nothing
+	Nothing -> Just (p, 1)
 
 connectLine, connectLine1, connectLine2 :: ElementIdable eid => eid -> eid -> DiagramMapM ()
 connectLine ei eo = (`connectLine'` eo) =<< lift . single =<< getInputPos ei
@@ -309,8 +310,8 @@ connectLineGen p1 p2 = do
 		l = layout dm
 	ps <- lift $ maybe (Left $ emsg dm) Right $ astar DiagramMapAStar {
 		startLine = p1, endLine = p2, diagramMapA = dm }
-	l' <- lift $ insertLine ps l
+	l' <- lift $ insertLine (processPos ps) l
 	put stt { diagramMap = dm { layout = l' } }
-	(\(Pos x y) -> updatePlace x y) `mapM_` ps
-	return ps
+	(\(Pos x y) -> updatePlace x y) `mapM_` processPos ps
+	return $ processPos ps
 	where emsg = ("astar: no route: " ++) . show

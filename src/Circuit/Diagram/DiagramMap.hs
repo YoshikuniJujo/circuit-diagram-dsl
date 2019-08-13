@@ -62,6 +62,18 @@ elementToPositions e (Pos x0 y0) = [ Pos x y |
 	y <- [y0 - h .. y0 + h'] ]
 	where (w, (h, h')) = elementSpace e
 
+processPos :: [Pos] -> [Pos]
+processPos [] = []
+processPos [p] = [p]
+processPos (p@(Pos x y) : ps@(Pos x' y' : _))
+	| abs (x - x') == 1, y == y' = p : processPos ps
+	| x == x', abs (y - y') == 1 = p : processPos ps
+	| x < x', y == y' = ((`Pos` y) <$> [x .. x' - 1]) ++ processPos ps
+	| x > x', y == y' = ((`Pos` y) <$> reverse [x' + 1 .. x]) ++ processPos ps
+	| x == x', y < y' = ((x `Pos`) <$> [y .. y' - 1]) ++ processPos ps
+	| x == x', y > y' = ((x `Pos`) <$> reverse [y' + 1 .. y]) ++ processPos ps
+	| otherwise = error $ "processPos: bad: " ++ show p ++ " " ++ show ps
+
 posToLine :: Dir -> [Pos] -> Either String [ElementDiagram]
 posToLine _ [] = Right []
 posToLine d [_] = (: []) <$> dirToLine' d L
