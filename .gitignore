@@ -2,3 +2,4 @@
 circuit-diagram-dsl.cabal
 *~
 *.svg
+.*.swp
