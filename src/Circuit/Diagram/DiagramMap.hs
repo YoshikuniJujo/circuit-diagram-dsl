@@ -95,6 +95,7 @@ overlapLine TopRight EndHLine = TInverted
 overlapLine BottomRight EndBottomLeft = TShape
 overlapLine HLine VLine = Cross
 overlapLine EndHLine VLine = CrossDot
+overlapLine EndHLine EndTopLeft = TInverted
 overlapLine ln ln' = error
 	$ "Circut.Diagram.Map.overlapLine: not yet implemented: overlapLine " ++
 		show ln ++ " " ++ show ln'
