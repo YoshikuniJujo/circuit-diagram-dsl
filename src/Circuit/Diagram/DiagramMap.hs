@@ -53,7 +53,7 @@ elementSpace NotGateE = (2, (1, 1))
 elementSpace (ConstGateE _) = (3, (0, 0))
 elementSpace TriGateE = (2, (3, 1))
 elementSpace (DelayE _) = (2, (0, 0))
-elementSpace BranchE = (1, (0, 1))
+elementSpace BranchE = (1, (0, 3))
 elementSpace _ = (1, (0, 0))
 
 elementToPositions :: ElementDiagram -> Pos -> [Pos]

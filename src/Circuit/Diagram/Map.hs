@@ -234,7 +234,7 @@ linePos (HLineText _ _) (Pos x y) =
 linePos BranchE (Pos x y) =
 	Right LinePos {
 		outputLinePos = [Pos (x - 1) y],
-		inputLinePos = [Pos (x + 1) y, Pos (x + 1) (y + 1)] }
+		inputLinePos = [Pos (x + 1) y, Pos (x + 1) (y + 3)] }
 linePos e pos = Left $ "linePos " ++ show e ++ " " ++ show pos
 
 data DiagramMapAStar = DiagramMapAStar {
