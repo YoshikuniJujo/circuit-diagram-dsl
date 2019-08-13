@@ -6,7 +6,7 @@ import Diagrams.Backend.SVG (renderSVG)
 
 import Circuit.DiagramDsl (
 	drawDiagram, DiagramMapM, execDiagramMapM, ElementId,
-	andGateD, orGateD, notGateD,
+	andGateD, orGateD, notGateD, triGateD,
 	connectLine, connectLine1, connectLine2, newElement,
 	inputPosition, inputPosition2, newElement0 )
 
@@ -15,8 +15,8 @@ main = case sample2 `execDiagramMapM` 2 of
 	Right s2 -> renderSVG "sample5.svg" (mkWidth 600) $ drawDiagram s2
 	Left emsg -> putStrLn $ "no diagram: " ++ emsg
 
-eid0, eid1, eid2, eid3, eid4 :: ElementId
-[eid0, eid1, eid2, eid3, eid4] = ["0", "1", "2", "3", "4"]
+eid0, eid1, eid2, eid3, eid4, eid5 :: ElementId
+[eid0, eid1, eid2, eid3, eid4, eid5] = ["0", "1", "2", "3", "4", "5"]
 
 sample2 :: DiagramMapM ()
 sample2 = do
@@ -29,3 +29,5 @@ sample2 = do
 	connectLine2 eid2 eid2
 	connectLine2 eid1 eid3
 	() <$ newElement eid4 notGateD ip0
+
+	() <$ newElement0 eid5 triGateD

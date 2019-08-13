@@ -220,7 +220,7 @@ linePos NotGateE (Pos x y) =
 linePos TriGateE (Pos x y) =
 	Right LinePos {
 		outputLinePos = [Pos (x - 1) y],
-		inputLinePos = [Pos (x + 2) (y - 2), Pos (x + 2) y] }
+		inputLinePos = [Pos (x + 2) (y - 3), Pos (x + 2) y] }
 linePos (ConstGateE _) (Pos x y) =
 	Right LinePos { outputLinePos = [Pos (x - 1) y], inputLinePos = [] }
 linePos (DelayE _) (Pos x y) =

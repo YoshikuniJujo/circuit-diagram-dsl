@@ -25,8 +25,8 @@ notGateDPure = (moveTo ((- 0.45) ^& 0) (triangle1_4 1.5) <> moveTo (0.66 ^& 0) (
 
 triGateD :: Diagram B
 triGateD =
-	moveTo ((- 2) ^& 2) (lineRight 0.74) <>
-	moveTo ((- 1.3) ^& 2) (lineBottom (- 1.6)) <>
+	moveTo ((- 2) ^& 3) (lineRight 0.74) <>
+	moveTo ((- 1.3) ^& 3) (lineBottom (- 2.6)) <>
 	moveTo ((- 1) ^& 0)
 		((moveTo ((- 1) ^& 0) (lineRight 0.1) <> triGateDPure <> moveTo (1 ^& 0) (lineRight (- 0.55))))
 
