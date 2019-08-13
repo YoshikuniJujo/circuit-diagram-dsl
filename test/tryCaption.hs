@@ -4,7 +4,7 @@
 import Diagrams.Prelude (mkWidth)
 import Diagrams.Backend.SVG (renderSVG)
 
-import Circuit.Diagram (
+import Circuit.DiagramDsl (
 	drawDiagram, DiagramMapM, execDiagramMapM, ElementId,
 	andGateD, notGateD, branchD, hLineTextD,
 	newElement0, newElement,
