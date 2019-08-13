@@ -93,7 +93,7 @@ overlapLine :: ElementDiagram -> ElementDiagram -> ElementDiagram
 overlapLine HLine EndBottomLeft = TShape
 overlapLine EndHLine EndBottomLeft = TShape
 overlapLine VLine HLine = Cross
-overlapLine VLine EndHLine = TLeft
+overlapLine VLine EndHLine = Cross
 overlapLine VLine EndHLineR = TRight
 overlapLine HLine TopLeft = TInverted
 overlapLine BottomRight EndHLineR = TShape
