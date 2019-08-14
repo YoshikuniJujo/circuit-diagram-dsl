@@ -128,6 +128,7 @@ overlapLine CrossDot EndBottomLeft = CrossDot
 overlapLine VLine TopLeft = CrossDot
 overlapLine Stump ed = ed
 overlapLine TopLeft EndBottomLeft = TRight
+overlapLine TopRight EndBottomLeft = CrossDot
 overlapLine TopLeft BottomRight = CrossDot
 overlapLine BottomLeft EndTopLeft = TRight
 overlapLine ln ln' = error
