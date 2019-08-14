@@ -13,7 +13,7 @@ import Circuit.DiagramDsl (
 
 main :: IO ()
 main = case sample2 `execDiagramMapM` 2 of
-	Right s2 -> renderSVG "caption.svg" (mkWidth 600) $ drawDiagram s2
+	Right s2 -> renderSVG "caption.svg" (mkWidth 1000) $ drawDiagram s2
 	Left emsg -> putStrLn $ "Can't draw diagram: " ++ emsg
 
 eid0, eid1, eid2, eid5, eid6, eid100, eid101, eid102, eid103, eid104 :: ElementId

@@ -114,7 +114,8 @@ hlineH = moveTo ((- 0.5) ^& 0) $ lineRight 0.5
 hlineHR = moveTo ((- 1) ^& 0) $ lineRight 0.5
 
 dotD :: Diagram B
-dotD = moveTo ((- 0.5) ^& 0) $ circle (1.0 / 8) # fc black
+-- dotD = moveTo ((- 0.5) ^& 0) $ circle (1.0 / 8) # fc black
+dotD = moveTo ((- 0.5) ^& 0) $ circle (1.0 / 10) # lwL (1.0 / 8)
 
 crossD, crossDotD :: Diagram B
 crossD = hlineD <> vlineD
