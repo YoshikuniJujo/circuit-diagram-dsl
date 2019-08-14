@@ -25,13 +25,13 @@ notGateDPure = (moveTo ((- 0.45) ^& 0) (triangle1_4 1.5) <> moveTo (0.66 ^& 0) (
 
 triGateD :: String -> String -> Diagram B
 triGateD t1 t2 =
-	moveTo ((- 1.1) ^& 1.7) (
+	moveTo ((- 1.15) ^& 1.7) (
 		rotateBy (- 1 / 4)
 			$ triGateText t1 t2 # scale (1 / 4) ) <>
 	moveTo ((- 2) ^& 3) (lineRight 0.74) <>
 	moveTo ((- 1.3) ^& 3) (lineBottom (- 2.6)) <>
 	moveTo ((- 1) ^& 0)
-		((moveTo ((- 1) ^& 0) (lineRight 0.1) <> triGateDPure <> moveTo (1 ^& 0) (lineRight (- 0.55))))
+		((moveTo ((- 1) ^& 0) (lineRight 0.1) <> triGateDPure <> moveTo (1 ^& 0) (lineRight (- 0.60))))
 
 triGateText :: String -> String -> Diagram B
 triGateText "" "" = mempty
