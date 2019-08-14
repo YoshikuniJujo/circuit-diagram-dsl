@@ -160,6 +160,7 @@ dirToLine L L = Right HLine
 dirToLine R T = Right TopLeft
 dirToLine R B = Right BottomLeft
 dirToLine R R = Right HLine
+dirToLine R L = Right CrossDot
 dirToLine d d' = Left $ "dirToLine " ++ show d ++ " " ++ show d'
 
 dirToLine' T L = Right EndBottomLeft
