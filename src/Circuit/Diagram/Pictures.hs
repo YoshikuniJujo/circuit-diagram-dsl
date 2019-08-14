@@ -55,7 +55,7 @@ delayD d =
 	moveTo ((- 2) ^& 0) (lineRight 0.5) <> delayDPure d <> moveTo (0 ^& 0) (lineRight (- 0.5))
 
 delayDPure d = moveTo ((- 1) ^& 0)
-	$ rect 1 0.85 # lwL 0.08 <> text (show d) # scale 0.6
+	$ rect 1 0.85 # lwL 0.08 <> moveTo (0 ^& (- 0.05)) (text (show d) # scale 0.6)
 
 andGateD :: Diagram B
 andGateD = moveTo ((- 1.5) ^& 0) $ (andGateIs <> andGatePure <> moveTo (1.5 ^& 0) (lineRight (- 0.2)))
