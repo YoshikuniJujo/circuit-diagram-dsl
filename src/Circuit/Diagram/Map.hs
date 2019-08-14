@@ -148,18 +148,25 @@ putElement0 eid e = do
 putElement :: ElementIdable eid => eid -> ElementDiagram -> Pos -> DiagramMapM (Maybe LinePos)
 putElement eid e (Pos x y) = putElementGen False eid e x (Just y)
 
+maybeMaximum :: Ord a => [Maybe a] -> Maybe a
+maybeMaximum [] = Nothing
+maybeMaximum (Just x : xs) = Just $ maybe x (max x) $ maybeMaximum xs
+maybeMaximum (Nothing : xs) = maybeMaximum xs
+
 putElementGen :: ElementIdable eid => Bool -> eid -> ElementDiagram -> Int -> Maybe Int -> DiagramMapM (Maybe LinePos)
 putElementGen b eidg e x my_ = do
 	me <- gets ((!? elementId eidg) . elementPos)
 	(\pe -> maybe pe (const $ return Nothing) me) $ do
-		let	(w, (h, h')) = elementSpace e
+		let	((w, (h, h')), _ps) = elementSpace e
 		my <- do
 			case my_ of
-				Just y -> bool Nothing my_ . ((y > (w - 1) `div` 2) &&) <$> placeable e (Pos x y)
+				Just y -> bool Nothing my_ . ((y > h) &&) <$> placeable e (Pos x y)
 				Nothing -> return my_
 		stt <- get
 		let	sp = space stt
-			y = fromMaybe sp $ place stt !? x
+			y = case maybeMaximum $ (place stt !?) <$> [x .. x + w + 1] of
+				Just yy -> yy + sp
+				Nothing -> sp
 			p = Pos x $ fromMaybe y my
 	
 			dm = diagramMap stt
@@ -168,7 +175,7 @@ putElementGen b eidg e x my_ = do
 			l'' = bool l' (insert (Pos (x - 1) $ posY p) HLine l') b
 		lp <- lift $ linePos e p
 		put stt {
-			place = P.foldr (`insert` (max y (posY p) + h + h' + 1 + fromIntegral sp))
+			place = P.foldr (`insert` (max y (posY p) + h + h' + 1))
 				(place stt) [x .. x + w - 1],
 			elementPos = insert (elementId eidg) lp $ elementPos stt,
 			diagramMap = dm { layout = l'' } }

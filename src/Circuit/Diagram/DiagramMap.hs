@@ -37,29 +37,44 @@ data ElementDiagram
 
 stump :: ElementDiagram -> Pos -> Map Pos ElementDiagram -> Map Pos ElementDiagram
 stump e p m = P.foldr (flip insert Stump) m
-	[ Pos x y |
+	$ [ Pos x y |
 		x <- [x0 .. x0 + w - 1],
 		y <- [y0 - h' .. y0 + h''],
-		(x, y) /= (x0, y0) ]
+		(x, y) /= (x0, y0) ] ++ (uncurry (movePos p) <$> ps)
 	where
-	(w, (h', h'')) = elementSpace e
+	((w, (h', h'')), ps) = elementSpace e
 	(x0, y0) = (posX p, posY p)
 
-elementSpace :: ElementDiagram -> (Int, (Int, Int))
-elementSpace AndGateE = (3, (1, 1))
-elementSpace OrGateE = (3, (1, 1))
-elementSpace NotGateE = (2, (1, 1))
-elementSpace (ConstGateE _) = (3, (0, 0))
-elementSpace (TriGateE _ _) = (2, (3, 1))
-elementSpace (DelayE _) = (2, (0, 0))
-elementSpace BranchE = (1, (0, 3))
-elementSpace _ = (1, (0, 0))
+elementSpace :: ElementDiagram -> ((Int, (Int, Int)), [(Int, Int)])
+elementSpace e = (elementSpaceGen e, elementSpaceInput e)
+
+elementSpaceInput :: ElementDiagram -> [(Int, Int)]
+elementSpaceInput AndGateE = [(3, - 1), (3, 1)]
+elementSpaceInput OrGateE = [(3, - 1), (3, 1)]
+elementSpaceInput NotGateE = [(2, 0)]
+elementSpaceInput (TriGateE _ _) = [(2, - 3), (2, 0)]
+elementSpaceInput (DelayE _) = [(2, 0)]
+elementSpaceInput BranchE = [(1, 0), (1, 3)]
+elementSpaceInput _ = []
+
+elementSpaceGen :: ElementDiagram -> (Int, (Int, Int))
+elementSpaceGen AndGateE = (3, (1, 1))
+elementSpaceGen OrGateE = (3, (1, 1))
+elementSpaceGen NotGateE = (2, (1, 1))
+elementSpaceGen (ConstGateE _) = (3, (0, 0))
+elementSpaceGen (TriGateE _ _) = (2, (3, 1))
+elementSpaceGen (DelayE _) = (2, (0, 0))
+elementSpaceGen BranchE = (1, (0, 3))
+elementSpaceGen _ = (1, (0, 0))
 
 elementToPositions :: ElementDiagram -> Pos -> [Pos]
-elementToPositions e (Pos x0 y0) = [ Pos x y |
+elementToPositions e p@(Pos x0 y0) = [ Pos x y |
 	x <- [x0 .. x0 + w - 1],
-	y <- [y0 - h .. y0 + h'] ]
-	where (w, (h, h')) = elementSpace e
+	y <- [y0 - h .. y0 + h'] ] ++ (uncurry (movePos p) <$> ps)
+	where ((w, (h, h')), ps) = elementSpace e
+
+movePos :: Pos -> Int -> Int -> Pos
+movePos (Pos x0 y0) dx dy = Pos (x0 + dx) (y0 + dy)
 
 processPos :: [Pos] -> [Pos]
 processPos [] = []
@@ -109,7 +124,9 @@ overlapLine EndHLine VLine = Cross
 overlapLine EndHLine EndTopLeft = TInverted
 overlapLine CrossDot EndBottomLeft = CrossDot
 overlapLine VLine TopLeft = CrossDot
+overlapLine Stump ed = ed
 overlapLine TopLeft BottomRight = CrossDot
+overlapLine BottomLeft EndTopLeft = TRight
 overlapLine ln ln' = error
 	$ "Circut.Diagram.Map.overlapLine: not yet implemented: overlapLine " ++
 		show ln ++ " " ++ show ln'
