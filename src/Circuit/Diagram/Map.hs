@@ -166,7 +166,7 @@ putElementGen b eidg e x my_ = do
 		let	sp = space stt
 			y = case maybeMaximum $ (place stt !?) <$> [x .. x + w + 1] of
 				Just yy -> yy + sp
-				Nothing -> sp
+				Nothing -> sp + h
 			p = Pos x $ fromMaybe y my
 	
 			dm = diagramMap stt
