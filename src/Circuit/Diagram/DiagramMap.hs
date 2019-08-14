@@ -46,7 +46,7 @@ stump e p m = P.foldr (flip insert Stump) m
 	(x0, y0) = (posX p, posY p)
 
 elementSpace :: ElementDiagram -> ((Int, (Int, Int)), [(Int, Int)])
-elementSpace e = (elementSpaceGen e, elementSpaceInput e)
+elementSpace e = (elementSpaceGen e, (- 1, 0) : elementSpaceInput e)
 
 elementSpaceInput :: ElementDiagram -> [(Int, Int)]
 elementSpaceInput AndGateE = [(3, - 1), (3, 1)]

@@ -285,7 +285,7 @@ horizontal l dr p@(Pos x y) ds = case l !? p of
 
 vertical l dr p@(Pos x y) ds = case  l !? p of
 	Just HLine -> vertical l dr (Pos x (y + dr)) (ds + 1)
---	Just EndHLine -> vertical l dr (Pos x (y + dr)) (ds + 1)
+	Just EndHLine -> vertical l dr (Pos x (y + dr)) (ds + 1)
 	Just _ -> Nothing
 	Nothing -> Just (p, ds)
 
