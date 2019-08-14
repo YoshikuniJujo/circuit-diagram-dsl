@@ -269,25 +269,33 @@ nextPosDiagramMap dma (Pos x0 y0) = [ pd |
 	p@(Pos x y) <- [Pos (x0 - 1) y0, Pos (x0 + 1) y0, Pos x0 (y0 - 1), Pos x0 (y0 + 1)],
 	0 <= x, x < w, 0 <= y, y < h,
 	pd <-	[ (p, 1) | isEndNode dma p ] ++
-		[ pd' | y == y0, pd' <- maybeToList $ horizontal l (x - x0) p 1 ] ++
-		[ pd' | x == x0, pd' <- maybeToList $ vertical l (y - y0) p 1 ] ]
+		[ pd' | y == y0, pd' <- maybeToList $ horizontal dma l (x - x0) p 1 ] ++
+		[ pd' | x == x0, pd' <- maybeToList $ vertical dma l (y - y0) p 1 ] ]
 	where
 	dm = diagramMapA dma
 	l = layout dm
 	w = width dm
 	h = height dm
 
-horizontal, vertical :: Map Pos ElementDiagram -> Int -> Pos -> Dist -> Maybe (Pos, Dist)
-horizontal l dr p@(Pos x y) ds = case l !? p of
-	Just VLine -> horizontal l dr (Pos (x + dr) y) (ds + 1)
+horizontal, vertical :: DiagramMapAStar -> Map Pos ElementDiagram -> Int -> Pos -> Dist -> Maybe (Pos, Dist)
+horizontal dma l dr p@(Pos x y) ds = case l !? p of
+	Just VLine
+		| isEndNode dma p' -> Just (p', ds + 1)
+		| otherwise -> horizontal dma l dr p' (ds + 1)
 	Just _ -> Nothing
 	Nothing -> Just (p, ds)
+	where p' = Pos (x + dr) y
 
-vertical l dr p@(Pos x y) ds = case  l !? p of
-	Just HLine -> vertical l dr (Pos x (y + dr)) (ds + 1)
-	Just EndHLine -> vertical l dr (Pos x (y + dr)) (ds + 1)
+vertical dma l dr p@(Pos x y) ds = case  l !? p of
+	Just HLine
+		| isEndNode dma p' -> Just (p', ds + 1)
+		| otherwise -> vertical dma l dr p' (ds + 1)
+	Just EndHLine
+		| isEndNode dma p' -> Just (p', ds + 1)
+		| otherwise -> vertical dma l dr p' (ds + 1)
 	Just _ -> Nothing
 	Nothing -> Just (p, ds)
+	where p' = Pos x (y + dr)
 
 connectLine, connectLine1, connectLine2 :: ElementIdable eid => eid -> eid -> DiagramMapM ()
 connectLine ei eo = (`connectLine'` eo) =<< lift . single =<< getInputPos ei
