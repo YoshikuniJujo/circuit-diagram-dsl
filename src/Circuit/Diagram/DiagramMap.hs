@@ -55,6 +55,8 @@ elementSpaceInput NotGateE = [(2, 0)]
 elementSpaceInput (TriGateE _ _) = [(2, - 3), (2, 0)]
 elementSpaceInput (DelayE _) = [(2, 0)]
 elementSpaceInput BranchE = [(1, 0), (1, 3)]
+elementSpaceInput HLine = [(1, 0)]
+elementSpaceInput (HLineText _ _) = [(1, 0)]
 elementSpaceInput _ = []
 
 elementSpaceGen :: ElementDiagram -> (Int, (Int, Int))
