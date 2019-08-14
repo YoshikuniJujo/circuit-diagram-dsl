@@ -30,4 +30,4 @@ sample2 = do
 	connectLine2 eid1 eid3
 	() <$ newElement eid4 notGateD ip0
 
-	() <$ newElement0 eid5 triGateD
+	() <$ newElement0 eid5 (triGateD "0:0" "63:0")

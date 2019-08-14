@@ -30,18 +30,21 @@ import qualified Data.ByteArray as BA
 import AStar.AStar
 import Circuit.Diagram.DiagramMap
 
-andGateD, orGateD, notGateD, triGateD, hLineD, branchD :: ElementDiagram
-[andGateD, orGateD, notGateD, triGateD, hLineD, branchD] =
-	[AndGateE, OrGateE, NotGateE, TriGateE, HLine, BranchE]
+andGateD, orGateD, notGateD, hLineD, branchD :: ElementDiagram
+[andGateD, orGateD, notGateD, hLineD, branchD] =
+	[AndGateE, OrGateE, NotGateE, HLine, BranchE]
 
-hLineTextD :: String -> String -> ElementDiagram
-hLineTextD = HLineText
+triGateD :: String -> String -> ElementDiagram
+triGateD = TriGateE
 
 constGateD :: Word64 -> ElementDiagram
 constGateD = ConstGateE
 
 delayD :: Word8 -> ElementDiagram
 delayD = DelayE
+
+hLineTextD :: String -> String -> ElementDiagram
+hLineTextD = HLineText
 
 newtype ElementId = ElementId BS.ByteString deriving (Show, Eq, Ord)
 
@@ -219,7 +222,7 @@ linePos AndGateE (Pos x y) = Right LinePos {
 linePos OrGateE p = linePos AndGateE p
 linePos NotGateE (Pos x y) =
 	Right LinePos { outputLinePos = [Pos (x - 1) y], inputLinePos = [Pos (x + 2) y] }
-linePos TriGateE (Pos x y) =
+linePos (TriGateE _ _) (Pos x y) =
 	Right LinePos {
 		outputLinePos = [Pos (x - 1) y],
 		inputLinePos = [Pos (x + 2) (y - 3), Pos (x + 2) y] }

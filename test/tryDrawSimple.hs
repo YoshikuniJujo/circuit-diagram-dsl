@@ -50,7 +50,7 @@ circuitDiagram = do
 	connectLine1 (Branch 0) (NotGate 2)
 
 	ip3 <- inputPosition2 lp3
-	lp4 <- newElement (TriGate 0) triGateD ip3
+	lp4 <- newElement (TriGate 0) (triGateD "0:0" "63:0") ip3
 	connectLine2 (Branch 0) (TriGate 0)
 	ip4 <- inputPosition1 lp4
 	ip5 <- inputPosition2 lp4

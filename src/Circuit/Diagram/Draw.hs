@@ -21,7 +21,7 @@ drawElement :: ElementDiagram -> Diagram B
 drawElement AndGateE = andGateD
 drawElement OrGateE = orGateD
 drawElement NotGateE = notGateD
-drawElement TriGateE = triGateD
+drawElement (TriGateE t1 t2) = triGateD t1 t2
 drawElement (ConstGateE bs) = constGateD bs
 drawElement (DelayE d) = delayD d
 drawElement HLine = hlineD

@@ -25,9 +25,8 @@ mkDiagramMap w h = DiagramMap { width = w, height = h, layout = empty }
 
 data ElementDiagram
 	= Stump
-	| AndGateE | OrGateE | NotGateE | TriGateE | ConstGateE Word64
-	| DelayE Word8
-	| BranchE
+	| AndGateE | OrGateE | NotGateE | TriGateE String String
+	| ConstGateE Word64 | DelayE Word8 | BranchE
 	| HLine | VLine
 	| TopLeft | TopRight | BottomLeft | BottomRight
 	| EndHLine | EndHLineR | EndTopLeft
@@ -51,7 +50,7 @@ elementSpace AndGateE = (3, (1, 1))
 elementSpace OrGateE = (3, (1, 1))
 elementSpace NotGateE = (2, (1, 1))
 elementSpace (ConstGateE _) = (3, (0, 0))
-elementSpace TriGateE = (2, (3, 1))
+elementSpace (TriGateE _ _) = (2, (3, 1))
 elementSpace (DelayE _) = (2, (0, 0))
 elementSpace BranchE = (1, (0, 3))
 elementSpace _ = (1, (0, 0))
