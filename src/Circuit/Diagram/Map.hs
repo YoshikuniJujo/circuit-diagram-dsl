@@ -172,7 +172,8 @@ putElementGen b eidg e x my_ = do
 			dm = diagramMap stt
 			l = layout dm
 			l' = stump e p $ insert p e l
-			l'' = bool l' (insert (Pos (x - 1) $ posY p) HLine l') b
+			l'' = bool l' (insert (Pos (x - 2) $ posY p) HLine
+				$ insert (Pos (x - 1) $ posY p) HLine l' ) b
 		lp <- lift $ linePos e p
 		put stt {
 			place = P.foldr (`insert` (max y (posY p) + h + h' + 1))
