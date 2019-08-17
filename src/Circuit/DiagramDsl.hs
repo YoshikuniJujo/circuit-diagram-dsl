@@ -2,18 +2,8 @@
 
 module Circuit.DiagramDsl (
 	drawDiagram,
-	DiagramMapM, DiagramMapState, runDiagramMapM, execDiagramMapM,
-	DiagramMap,
-	ElementIdable(..), ElementId,
-	ElementDiagram,
-		andGateD, orGateD, notGateD, triGateD, constGateD, delayD,
-		hLineD, hLineTextD, branchD,
-	Pos, LinePos, putElement0, putElement, newElement0, newElement,
-	inputPosition, inputPosition1, inputPosition2,
-	connectLine, connectLine1, connectLine2,
-
-	-- * NEW
-
+	DiagramMapM, runDiagramMapM, execDiagramMapM,
+	DiagramMap, ElementIdable(..), ElementId,
 	NewElement0, NewElementDiagram0(..),
 	newPutElementEnd0, newPutElement0, newNewElementEnd0, newNewElement0,
 	NewElement1, NewElementDiagram1(..),
