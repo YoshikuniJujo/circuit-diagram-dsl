@@ -20,7 +20,7 @@ data Elem
 	deriving Show
 
 instance ElementIdable Elem where
-	elementIdGen e = convert . hash @_ @SHA3_256 . pack $ pfx ++ show n
+	elementId e = convert . hash @_ @SHA3_256 . pack $ pfx ++ show n
 		where (pfx, n) = case e of
 			NotGate n' -> ("NotGate", n')
 			TriGate n' -> ("TriGate", n')
@@ -32,43 +32,43 @@ instance ElementIdable Elem where
 
 circuitDiagram :: DiagramMapM ()
 circuitDiagram = do
-	lp0 <- newNewElementEnd1 (NotGate 0) NewNotGateD
-	ip0 <- newInputPosition0 lp0
-	lp1 <- newNewElement1 (Caption 0) (NewHLineTextD "31:16" "63:32") ip0
-	ip1 <- newInputPosition0 lp1
-	lp2 <- newNewElement1 (NotGate 1) NewNotGateD ip1
-	newConnectLine0 lp0 (Caption 0)
-	newConnectLine0 lp1 (NotGate 1)
-	newConnectLine0 lp2 (NotGate 1)
+	lp0 <- newElementEnd1 (NotGate 0) NotGateD
+	ip0 <- inputPosition0 lp0
+	lp1 <- newElement1 (Caption 0) (HLineTextD "31:16" "63:32") ip0
+	ip1 <- inputPosition0 lp1
+	lp2 <- newElement1 (NotGate 1) NotGateD ip1
+	connectLine0 lp0 (Caption 0)
+	connectLine0 lp1 (NotGate 1)
+	connectLine0 lp2 (NotGate 1)
 
-	lp2 <- newNewElementEnd1 (NotGate 2) NewNotGateD
-	ip2 <- newInputPosition0 lp2
-	lp3 <- newNewElement2 (Branch 0) NewBranchD ip2
-	newConnectLine0 lp2 (NotGate 2)
+	lp2 <- newElementEnd1 (NotGate 2) NotGateD
+	ip2 <- inputPosition0 lp2
+	lp3 <- newNewElement2 (Branch 0) BranchD ip2
+	connectLine0 lp2 (NotGate 2)
 	newConnectLine1 lp3 (NotGate 2)
 
 	ip3 <- newInputPosition2 lp3
-	lp4 <- newNewElement2 (TriGate 0) (NewTriGateD "0:0" "63:0") ip3
+	lp4 <- newNewElement2 (TriGate 0) (TriGateD "0:0" "63:0") ip3
 	newConnectLine2 lp3 (TriGate 0)
 	ip4 <- newInputPosition1 lp4
 	ip5 <- newInputPosition2 lp4
-	lp6 <- newNewElement1 (NotGate 3) NewNotGateD ip4
-	ip6 <- newInputPosition0 lp6
-	lp7 <- newNewElement1 (NotGate 4) NewNotGateD ip5
-	ip7 <- newInputPosition0 lp7
+	lp6 <- newElement1 (NotGate 3) NotGateD ip4
+	ip6 <- inputPosition0 lp6
+	lp7 <- newElement1 (NotGate 4) NotGateD ip5
+	ip7 <- inputPosition0 lp7
 	newConnectLine1 lp4 (NotGate 3)
 	newConnectLine2 lp4 (NotGate 4)
 
-	() <$ newNewElement0 (ConstGate 0) (NewConstGateD 0x123456789abcdef0) ip6
-	newConnectLine0 lp6 (ConstGate 0)
+	() <$ newElement0 (ConstGate 0) (ConstGateD 0x123456789abcdef0) ip6
+	connectLine0 lp6 (ConstGate 0)
 
-	lp8 <- newNewElement1 (Delay 0) (NewDelayD 255) ip7
-	ip8 <- newInputPosition0 lp8
-	newConnectLine0 lp7 (Delay 0)
+	lp8 <- newElement1 (Delay 0) (DelayD 255) ip7
+	ip8 <- inputPosition0 lp8
+	connectLine0 lp7 (Delay 0)
 
-	lp9 <- newNewElement1 (NotGate 5) NewNotGateD ip8
-	ip9 <- newInputPosition0 lp9
-	newConnectLine0 lp8 (NotGate 5)
+	lp9 <- newElement1 (NotGate 5) NotGateD ip8
+	ip9 <- inputPosition0 lp9
+	connectLine0 lp8 (NotGate 5)
 
-	() <$ newNewElement1 (IdGate 0) NewHLineD ip9
-	newConnectLine0 lp9 (IdGate 0)
+	() <$ newElement1 (IdGate 0) HLineD ip9
+	connectLine0 lp9 (IdGate 0)

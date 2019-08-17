@@ -16,16 +16,16 @@ eid0, eid1, eid2, eid3, eid4, eid5 :: ElementId
 
 sample2 :: DiagramMapM ()
 sample2 = do
-	lp0 <- newNewElementEnd1 eid0 NewNotGateD
-	ip0 <- newInputPosition0 lp0
-	lp1 <- newNewElement2 eid1 NewAndGateD ip0
+	lp0 <- newElementEnd1 eid0 NotGateD
+	ip0 <- inputPosition0 lp0
+	lp1 <- newNewElement2 eid1 AndGateD ip0
 	ip1 <- newInputPosition2 lp1
-	lp2 <- newNewElement2 eid2 NewOrGateD ip0
-	() <$ newNewElement2 eid3 NewAndGateD ip1
-	newConnectLine0 lp0 eid2
+	lp2 <- newNewElement2 eid2 OrGateD ip0
+	() <$ newNewElement2 eid3 AndGateD ip1
+	connectLine0 lp0 eid2
 	newConnectLine1 lp2 eid3
 	newConnectLine2 lp2 eid2
 	newConnectLine2 lp1 eid3
-	() <$ newNewElement1 eid4 NewNotGateD ip0
+	() <$ newElement1 eid4 NotGateD ip0
 
-	() <$ newNewElementEnd2 eid5 (NewTriGateD "0:0" "63:0")
+	() <$ newNewElementEnd2 eid5 (TriGateD "0:0" "63:0")

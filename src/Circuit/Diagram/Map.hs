@@ -52,13 +52,13 @@ instance IsString ElementId where
 	fromString = ElementId . BA.convert . hash @_ @SHA3_256 . BSC.pack
 
 class ElementIdable a where
-	elementIdGen :: a -> BS.ByteString
+	elementId :: a -> BS.ByteString
 
-elementId :: ElementIdable eid => eid -> ElementId
-elementId = ElementId . elementIdGen
+elementId' :: ElementIdable eid => eid -> ElementId
+elementId' = ElementId . elementId
 
 instance ElementIdable ElementId where
-	elementIdGen (ElementId bs) = bs
+	elementId (ElementId bs) = bs
 
 data DiagramMapState = DiagramMapState {
 	space :: Int,
@@ -155,7 +155,7 @@ maybeMaximum (Nothing : xs) = maybeMaximum xs
 
 putElementGen :: ElementIdable eid => Bool -> eid -> ElementDiagram -> Int -> Maybe Int -> DiagramMapM (Maybe LinePos)
 putElementGen b eidg e x my_ = do
-	me <- gets ((!? elementId eidg) . elementPos)
+	me <- gets ((!? elementId' eidg) . elementPos)
 	(\pe -> maybe pe (const $ return Nothing) me) $ do
 		let	((w, (h, h')), _ps) = elementSpace e
 		my <- do
@@ -178,7 +178,7 @@ putElementGen b eidg e x my_ = do
 		put stt {
 			place = P.foldr (`insert` (max y (posY p) + h + h' + 1))
 				(place stt) [x .. x + w - 1],
-			elementPos = insert (elementId eidg) lp $ elementPos stt,
+			elementPos = insert (elementId' eidg) lp $ elementPos stt,
 			diagramMap = dm { layout = l'' } }
 		expandWidth $ posX p + w + sp
 		expandHeight $ posY p + h + h' + 1 + sp
@@ -186,9 +186,9 @@ putElementGen b eidg e x my_ = do
 
 getElementPos :: ElementIdable eid => eid -> DiagramMapM LinePos
 getElementPos eidg = lift
-	=<< gets (maybe (Left emsg) Right . (!? elementId eidg) . elementPos)
+	=<< gets (maybe (Left emsg) Right . (!? elementId' eidg) . elementPos)
 	where emsg = "No such element: " ++
-		"Circuit.Diagram.Map.getElementPos " ++ show (elementId eidg)
+		"Circuit.Diagram.Map.getElementPos " ++ show (elementId' eidg)
 
 getInputPos :: ElementIdable eid => eid -> DiagramMapM [Pos]
 getInputPos = (inputLinePos <$>) . getElementPos
@@ -320,7 +320,7 @@ connectLine' :: ElementIdable eid => Pos -> eid -> DiagramMapM ()
 connectLine' p1 eidg = do
 	p2 <- outputLinePos <$> getElementPos eidg
 	ps <- connectLineGen p1 p2
-	addElementOutputPos (elementId eidg) ps
+	addElementOutputPos (elementId' eidg) ps
 
 connectLineGen :: Pos -> [Pos] -> DiagramMapM [Pos]
 connectLineGen p1 p2 = do
