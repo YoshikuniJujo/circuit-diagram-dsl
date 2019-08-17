@@ -6,11 +6,7 @@ import Data.ByteString.Char8 (pack)
 import Diagrams.Prelude (mkWidth)
 import Diagrams.Backend.SVG (renderSVG)
 
-import Circuit.DiagramDsl (
-	drawDiagram, DiagramMapM, execDiagramMapM, ElementIdable(..),
-	notGateD, triGateD, constGateD, delayD, hLineD, branchD, hLineTextD,
-	newElement0, newElement, connectLine, connectLine1, connectLine2,
-	inputPosition, inputPosition1, inputPosition2 )
+import Circuit.DiagramDsl
 import Crypto.Hash (hash, SHA3_256)
 
 main :: IO ()
@@ -36,37 +32,43 @@ instance ElementIdable Elem where
 
 circuitDiagram :: DiagramMapM ()
 circuitDiagram = do
-	ip0 <- inputPosition =<< newElement0 (NotGate 0) notGateD
-	ip1 <- inputPosition
-		=<< newElement (Caption 0) (hLineTextD "31:16" "63:32") ip0
-	_ <- newElement (NotGate 1) notGateD ip1
-	connectLine (NotGate 0) (Caption 0)
-	connectLine (Caption 0) (NotGate 1)
-	connectLine (NotGate 1) (NotGate 1)
+	lp0 <- newNewElementEnd1 (NotGate 0) NewNotGateD
+	ip0 <- newInputPosition0 lp0
+	lp1 <- newNewElement1 (Caption 0) (NewHLineTextD "31:16" "63:32") ip0
+	ip1 <- newInputPosition0 lp1
+	lp2 <- newNewElement1 (NotGate 1) NewNotGateD ip1
+	newConnectLine0 lp0 (Caption 0)
+	newConnectLine0 lp1 (NotGate 1)
+	newConnectLine0 lp2 (NotGate 1)
 
-	ip2 <- inputPosition =<< newElement0 (NotGate 2) notGateD
-	lp3 <- newElement (Branch 0) branchD ip2
-	connectLine (NotGate 2) (NotGate 2)
-	connectLine1 (Branch 0) (NotGate 2)
+	lp2 <- newNewElementEnd1 (NotGate 2) NewNotGateD
+	ip2 <- newInputPosition0 lp2
+	lp3 <- newNewElement2 (Branch 0) NewBranchD ip2
+	newConnectLine0 lp2 (NotGate 2)
+	newConnectLine1 lp3 (NotGate 2)
 
-	ip3 <- inputPosition2 lp3
-	lp4 <- newElement (TriGate 0) (triGateD "0:0" "63:0") ip3
-	connectLine2 (Branch 0) (TriGate 0)
-	ip4 <- inputPosition1 lp4
-	ip5 <- inputPosition2 lp4
-	ip6 <- inputPosition =<< newElement (NotGate 3) notGateD ip4
-	ip7 <- inputPosition =<< newElement (NotGate 4) notGateD ip5
-	connectLine1 (TriGate 0) (NotGate 3)
-	connectLine2 (TriGate 0) (NotGate 4)
+	ip3 <- newInputPosition2 lp3
+	lp4 <- newNewElement2 (TriGate 0) (NewTriGateD "0:0" "63:0") ip3
+	newConnectLine2 lp3 (TriGate 0)
+	ip4 <- newInputPosition1 lp4
+	ip5 <- newInputPosition2 lp4
+	lp6 <- newNewElement1 (NotGate 3) NewNotGateD ip4
+	ip6 <- newInputPosition0 lp6
+	lp7 <- newNewElement1 (NotGate 4) NewNotGateD ip5
+	ip7 <- newInputPosition0 lp7
+	newConnectLine1 lp4 (NotGate 3)
+	newConnectLine2 lp4 (NotGate 4)
 
-	() <$ newElement (ConstGate 0) (constGateD 0x123456789abcdef0) ip6
-	connectLine (NotGate 3) (ConstGate 0)
+	() <$ newNewElement0 (ConstGate 0) (NewConstGateD 0x123456789abcdef0) ip6
+	newConnectLine0 lp6 (ConstGate 0)
 
-	ip8 <- inputPosition =<< newElement (Delay 0) (delayD 255) ip7
-	connectLine (NotGate 4) (Delay 0)
+	lp8 <- newNewElement1 (Delay 0) (NewDelayD 255) ip7
+	ip8 <- newInputPosition0 lp8
+	newConnectLine0 lp7 (Delay 0)
 
-	ip9 <- inputPosition =<< newElement (NotGate 5) notGateD ip8
-	connectLine (Delay 0) (NotGate 5)
+	lp9 <- newNewElement1 (NotGate 5) NewNotGateD ip8
+	ip9 <- newInputPosition0 lp9
+	newConnectLine0 lp8 (NotGate 5)
 
-	() <$ newElement (IdGate 0) hLineD ip9
-	connectLine (NotGate 5) (IdGate 0)
+	() <$ newNewElement1 (IdGate 0) NewHLineD ip9
+	newConnectLine0 lp9 (IdGate 0)

@@ -16,14 +16,16 @@ eid0, eid1, eid2, eid3, eid4, eid5 :: ElementId
 
 sample :: DiagramMapM ()
 sample = do
-	ip0 <- inputPosition =<< newElement0 eid4 hLineD
-	lp <- newElement0 eid0 hLineD
-	ip <- inputPosition lp
-	() <$ newElement eid1 hLineD ip
-	connectLine eid0 eid1
-	connectLine eid1 eid1
-	ip2 <- inputPosition =<< newElement0 eid2 hLineD
-	connectLine eid2 eid1
+	lp0 <- newNewElementEnd1 eid4 NewHLineD
+	ip0 <- newInputPosition0 lp0
+	lp <- newNewElementEnd1 eid0 NewHLineD
+	ip <- newInputPosition0 lp
+	lp1 <- newNewElement1 eid1 NewHLineD ip
+	newConnectLine0 lp eid1
+	newConnectLine0 lp1 eid1
+	lp2 <- newNewElementEnd1 eid2 NewHLineD
+	ip2 <- newInputPosition0 lp2
+	newConnectLine0 lp2 eid1
 
-	() <$ newElement eid3 hLineD ip2
-	connectLine eid3 eid4
+	lp3 <- newNewElement1 eid3 NewHLineD ip2
+	newConnectLine0 lp3 eid4
