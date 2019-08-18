@@ -10,14 +10,16 @@ module Circuit.DiagramDsl (
 	putElementEnd1, putElement1, newElementEnd1, newElement1,
 	inputPosition0, connectLine0,
 	Element2, ElementDiagram2(..),
-	newPutElementEnd2, newPutElement2, newNewElementEnd2, newNewElement2,
-	newInputPosition1, newInputPosition2, newConnectLine1, newConnectLine2
+	putElementEnd2, putElement2, newElementEnd2, newElement2,
+	inputPosition1, inputPosition2, connectLine1, connectLine2
 	) where
 
 import Data.Word
 
 import Circuit.Diagram.Draw
-import Circuit.Diagram.Map hiding (putElement0, newElement0)
+import Circuit.Diagram.Map hiding (
+	putElement0, newElement0,
+	inputPosition1, inputPosition2, connectLine1, connectLine2 )
 
 import qualified Circuit.Diagram.Map as M
 
@@ -92,34 +94,34 @@ newToDiagram2 OrGateD = orGateD
 newToDiagram2 (TriGateD t1 t2) = triGateD t1 t2
 newToDiagram2 BranchD = branchD
 
-newPutElementEnd2 :: ElementIdable eid =>
+putElementEnd2 :: ElementIdable eid =>
 	eid -> ElementDiagram2 -> DiagramMapM (Maybe (Element2 eid))
-newPutElementEnd2 eid ed = do
+putElementEnd2 eid ed = do
 	lps <- M.putElement0 eid $ newToDiagram2 ed
 	return $ NewElement2 eid <$> lps
 
-newPutElement2 :: ElementIdable eid =>
+putElement2 :: ElementIdable eid =>
 	eid -> ElementDiagram2 -> Pos -> DiagramMapM (Maybe (Element2 eid))
-newPutElement2 eid ed pos = do
+putElement2 eid ed pos = do
 	lps <- putElement eid (newToDiagram2 ed) pos
 	return $ NewElement2 eid <$> lps
 
-newNewElementEnd2 :: ElementIdable eid =>
+newElementEnd2 :: ElementIdable eid =>
 	eid -> ElementDiagram2 -> DiagramMapM (Element2 eid)
-newNewElementEnd2 eid ed = do
+newElementEnd2 eid ed = do
 	lps <- M.newElement0 eid $ newToDiagram2 ed
 	return $ NewElement2 eid lps
 
-newNewElement2 :: ElementIdable eid =>
+newElement2 :: ElementIdable eid =>
 	eid -> ElementDiagram2 -> Pos -> DiagramMapM (Element2 eid)
-newNewElement2 eid ed pos = do
+newElement2 eid ed pos = do
 	lps <- newElement eid (newToDiagram2 ed) pos
 	return $ NewElement2 eid lps
 
-newInputPosition1, newInputPosition2 :: Element2 eid -> DiagramMapM Pos
-newInputPosition1 (NewElement2 _ lps) = inputPosition1 lps
-newInputPosition2 (NewElement2 _ lps) = inputPosition2 lps
+inputPosition1, inputPosition2 :: Element2 eid -> DiagramMapM Pos
+inputPosition1 (NewElement2 _ lps) = M.inputPosition1 lps
+inputPosition2 (NewElement2 _ lps) = M.inputPosition2 lps
 
-newConnectLine1, newConnectLine2 :: ElementIdable eid => Element2 eid -> eid -> DiagramMapM ()
-newConnectLine1 (NewElement2 eid1 _) eid2 = connectLine1 eid1 eid2
-newConnectLine2 (NewElement2 eid1 _) eid2 = connectLine2 eid1 eid2
+connectLine1, connectLine2 :: ElementIdable eid => Element2 eid -> eid -> DiagramMapM ()
+connectLine1 (NewElement2 eid1 _) eid2 = M.connectLine1 eid1 eid2
+connectLine2 (NewElement2 eid1 _) eid2 = M.connectLine2 eid1 eid2

@@ -18,5 +18,5 @@ sample :: DiagramMapM ()
 sample = do
 	lp <- newElementEnd1 eid0 NotGateD
 	ip <- inputPosition0 lp
-	() <$ newNewElement2 eid1 OrGateD ip
+	() <$ newElement2 eid1 OrGateD ip
 	connectLine0 lp eid1

@@ -43,21 +43,21 @@ circuitDiagram = do
 
 	lp2 <- newElementEnd1 (NotGate 2) NotGateD
 	ip2 <- inputPosition0 lp2
-	lp3 <- newNewElement2 (Branch 0) BranchD ip2
+	lp3 <- newElement2 (Branch 0) BranchD ip2
 	connectLine0 lp2 (NotGate 2)
-	newConnectLine1 lp3 (NotGate 2)
+	connectLine1 lp3 (NotGate 2)
 
-	ip3 <- newInputPosition2 lp3
-	lp4 <- newNewElement2 (TriGate 0) (TriGateD "0:0" "63:0") ip3
-	newConnectLine2 lp3 (TriGate 0)
-	ip4 <- newInputPosition1 lp4
-	ip5 <- newInputPosition2 lp4
+	ip3 <- inputPosition2 lp3
+	lp4 <- newElement2 (TriGate 0) (TriGateD "0:0" "63:0") ip3
+	connectLine2 lp3 (TriGate 0)
+	ip4 <- inputPosition1 lp4
+	ip5 <- inputPosition2 lp4
 	lp6 <- newElement1 (NotGate 3) NotGateD ip4
 	ip6 <- inputPosition0 lp6
 	lp7 <- newElement1 (NotGate 4) NotGateD ip5
 	ip7 <- inputPosition0 lp7
-	newConnectLine1 lp4 (NotGate 3)
-	newConnectLine2 lp4 (NotGate 4)
+	connectLine1 lp4 (NotGate 3)
+	connectLine2 lp4 (NotGate 4)
 
 	() <$ newElement0 (ConstGate 0) (ConstGateD 0x123456789abcdef0) ip6
 	connectLine0 lp6 (ConstGate 0)
