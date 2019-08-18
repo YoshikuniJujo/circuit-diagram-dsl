@@ -18,31 +18,31 @@ eid0, eid1, eid2, eid5, eid6, eid100, eid101, eid102, eid103, eid104 :: ElementI
 
 sample2 :: DiagramMapM ()
 sample2 = do
-	lp0 <- newElementEnd1 eid0 NotGateD
+	lp0 <- newElementEnd1 eid0 notGateD
 	ip0 <- inputPosition0 lp0
-	lp1 <- newElement1 eid100 (HLineTextD "63:32" "31:0") ip0
+	lp1 <- newElement1 eid100 (hLineTextD "63:32" "31:0") ip0
 	ip1 <- inputPosition0 lp1
-	lp2 <- newElement2 eid1 AndGateD ip1
+	lp2 <- newElement2 eid1 andGateD ip1
 	ip2 <- inputPosition2 lp2
-	il3 <- newElement2 eid102 BranchD ip2
+	il3 <- newElement2 eid102 branchD ip2
 	ip3 <- inputPosition1 il3
 	ip4 <- inputPosition2 il3
 	connectLine0 lp0 eid100
 	connectLine0 lp1 eid1
 	connectLine2 lp2 eid102
-	lp5 <- newElement1 eid103 (HLineTextD "62:0" "63:1") ip3
+	lp5 <- newElement1 eid103 (hLineTextD "62:0" "63:1") ip3
 	ip5 <- inputPosition0 lp5
-	lp6 <- newElement1 eid104 (HLineTextD "0:0" "0:0") ip4
+	lp6 <- newElement1 eid104 (hLineTextD "0:0" "0:0") ip4
 	ip6 <- inputPosition0 lp6
 	connectLine1 il3 eid103
 	connectLine2 il3 eid104
-	() <$ newElement1 eid5 NotGateD ip5
-	() <$  newElement1 eid6 NotGateD ip6
+	() <$ newElement1 eid5 notGateD ip5
+	() <$  newElement1 eid6 notGateD ip6
 	connectLine0 lp5 eid5
 	connectLine0 lp6 eid6
 
-	il7 <- newElementEnd1 eid2 NotGateD
+	il7 <- newElementEnd1 eid2 notGateD
 	ip7 <- inputPosition0 il7
-	il8 <- newElement2 eid101 BranchD ip7
+	il8 <- newElement2 eid101 branchD ip7
 	connectLine0 il7 eid2
 	connectLine1 il8 eid2
