@@ -63,6 +63,7 @@ data Element1 a = NewElement1 a LinePos deriving Show
 
 data ElementDiagram1
 	= NotGateD | DelayD Word8 | HLineD | HLineTextD String String 
+	deriving Show
 
 notGateD :: ElementDiagram1
 notGateD = NotGateD
@@ -115,6 +116,7 @@ connectLine0 (NewElement1 eid1 _) eid2 = connectLine eid1 eid2
 data Element2 a = NewElement2 a LinePos deriving Show
 
 data ElementDiagram2 =  AndGateD | OrGateD | TriGateD String String | BranchD
+	deriving Show
 
 andGateD, orGateD :: ElementDiagram2
 andGateD = AndGateD
