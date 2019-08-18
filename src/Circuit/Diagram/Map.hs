@@ -7,10 +7,11 @@ module Circuit.Diagram.Map (
 	ElementDiagram,
 	andGateD, orGateD, notGateD, triGateD, constGateD, delayD,
 	hLineD, hLineTextD, branchD,
-	Pos, LinePos,
-	putElement0, putElement, newElement0, newElement,
+	Pos(..), LinePos,
+	putElementGen, putElement0, putElement, newElement0, newElement,
 	inputPosition, inputPosition1, inputPosition2,
-	connectLine, connectLine1, connectLine2 ) where
+	connectLine, connectLine1, connectLine2,
+	getSpace ) where
 
 import Prelude as P
 

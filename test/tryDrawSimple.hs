@@ -32,43 +32,43 @@ instance ElementIdable Elem where
 
 circuitDiagram :: DiagramMapM ()
 circuitDiagram = do
-	lp0 <- newElementEnd1 (NotGate 0) notGateD
+	lp0 <- newElementEnd (NotGate 0) notGateD
 	ip0 <- inputPosition0 lp0
-	lp1 <- newElement1 (Caption 0) (hLineTextD "31:16" "63:32") ip0
+	lp1 <- newElement (Caption 0) (hLineTextD "31:16" "63:32") ip0
 	ip1 <- inputPosition0 lp1
-	lp2 <- newElement1 (NotGate 1) notGateD ip1
+	lp2 <- newElement (NotGate 1) notGateD ip1
 	connectLine0 lp0 (Caption 0)
 	connectLine0 lp1 (NotGate 1)
 	connectLine0 lp2 (NotGate 1)
 
-	lp2 <- newElementEnd1 (NotGate 2) notGateD
+	lp2 <- newElementEnd (NotGate 2) notGateD
 	ip2 <- inputPosition0 lp2
-	lp3 <- newElement2 (Branch 0) branchD ip2
+	lp3 <- newElement (Branch 0) branchD ip2
 	connectLine0 lp2 (NotGate 2)
 	connectLine1 lp3 (NotGate 2)
 
 	ip3 <- inputPosition2 lp3
-	lp4 <- newElement2 (TriGate 0) (triGateD "0:0" "63:0") ip3
+	lp4 <- newElement (TriGate 0) (triGateD "0:0" "63:0") ip3
 	connectLine2 lp3 (TriGate 0)
 	ip4 <- inputPosition1 lp4
 	ip5 <- inputPosition2 lp4
-	lp6 <- newElement1 (NotGate 3) notGateD ip4
+	lp6 <- newElement (NotGate 3) notGateD ip4
 	ip6 <- inputPosition0 lp6
-	lp7 <- newElement1 (NotGate 4) notGateD ip5
+	lp7 <- newElement (NotGate 4) notGateD ip5
 	ip7 <- inputPosition0 lp7
 	connectLine1 lp4 (NotGate 3)
 	connectLine2 lp4 (NotGate 4)
 
-	() <$ newElement0 (ConstGate 0) (constGateD 0x123456789abcdef0) ip6
+	() <$ newElement (ConstGate 0) (constGateD 0x123456789abcdef0) ip6
 	connectLine0 lp6 (ConstGate 0)
 
-	lp8 <- newElement1 (Delay 0) (delayD 255) ip7
+	lp8 <- newElement (Delay 0) (delayD 255) ip7
 	ip8 <- inputPosition0 lp8
 	connectLine0 lp7 (Delay 0)
 
-	lp9 <- newElement1 (NotGate 5) notGateD ip8
+	lp9 <- newElement (NotGate 5) notGateD ip8
 	ip9 <- inputPosition0 lp9
 	connectLine0 lp8 (NotGate 5)
 
-	() <$ newElement1 (IdGate 0) hLineD ip9
+	() <$ newElement (IdGate 0) hLineD ip9
 	connectLine0 lp9 (IdGate 0)
