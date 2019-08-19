@@ -135,6 +135,7 @@ overlapLine TopLeft EndHLine = TInverted
 overlapLine TopRight EndHLineR = TInverted
 overlapLine HLine EndHLine = HLine
 overlapLine EndTopLeft EndHLine = TInverted
+overlapLine TInverted EndBottomLeft = CrossDot
 overlapLine TLeft HLine = HLineText "boo" "boo"
 overlapLine ln ln' = error
 	$ "Circut.Diagram.Map.overlapLine: not yet implemented: overlapLine " ++
