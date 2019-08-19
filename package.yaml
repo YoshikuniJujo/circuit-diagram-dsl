@@ -34,7 +34,6 @@ library:
   source-dirs: src
   exposed-modules:
     - Circuit.DiagramDsl
-    - Circuit.DiagramDslOld
 
 tests:
   circuit-diagram-test:
