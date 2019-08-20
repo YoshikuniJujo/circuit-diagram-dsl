@@ -29,7 +29,9 @@ import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteArray as BA
 
 import AStar.AStar
-import Circuit.Diagram.DiagramMap
+import Circuit.Diagram.DiagramMap hiding (stump)
+
+import qualified Circuit.Diagram.DiagramMap as DM
 
 andGateD, orGateD, notGateD, hLineD, branchD :: ElementDiagram
 [andGateD, orGateD, notGateD, hLineD, branchD] =
@@ -138,46 +140,60 @@ maybeMaximum [] = Nothing
 maybeMaximum (Just x : xs) = Just $ maybe x (max x) $ maybeMaximum xs
 maybeMaximum (Nothing : xs) = maybeMaximum xs
 
-{-
 calculateY :: ElementDiagram -> Int -> Maybe Int -> DiagramMapM Int
-calculateY e -> x my_ = do
+calculateY e x my_ = do
+	stt <- get
 	my <- case my_ of
-		Just y -> Bool Nothing my_ . ((y > h) &&) <$> placeable e (Pos x y)
+		Just y -> bool Nothing my_ . ((y > h) &&) <$> placeable e (Pos x y)
 		Nothing -> return Nothing
 	let	y = case maybeMaximum $ (place stt !?) <$> [x .. x + w + 1] of
 			Just yy -> yy
 			Nothing -> h
-	where ((w, (h, h')), _ps) = elementSpace e
-	-}
+	sp <- getSpace
+	return $ fromMaybe (y + sp) my
+	where ((w, (h, _h')), _ps) = elementSpace e
+
+putE :: Pos -> ElementDiagram -> DiagramMapM ()
+putE p e = do
+	stt <- get
+	let	dm = diagramMap stt
+		l = layout dm
+		l' = insert p e l
+	put stt { diagramMap = dm { layout = l' } }
+
+stump :: Pos -> ElementDiagram -> DiagramMapM ()
+stump p e = do
+	stt <- get
+	let	dm = diagramMap stt
+		l = layout dm
+		l' = DM.stump e p l
+	put stt { diagramMap = dm { layout = l' } }
+
+putElementPos :: ElementIdable eid => eid -> LinePos -> DiagramMapM ()
+putElementPos eid lp = do
+	stt <- get
+	put stt { elementPos = insert (elementId' eid) lp $ elementPos stt }
 
 putElementGen :: ElementIdable eid => Bool -> [eid] -> ElementDiagram -> Int -> Maybe Int -> DiagramMapM (Maybe LinePos)
-putElementGen b [eidg] e x my_ = do
-	me <- gets ((!? elementId' eidg) . elementPos)
+putElementGen b [eid] e x my_ = do
+	me <- gets ((!? elementId' eid) . elementPos)
 	(\pe -> maybe pe (const $ return Nothing) me) $ do
-		my <- case my_ of
-			Just y -> bool Nothing my_ . ((y > h) &&) <$> placeable e (Pos x y)
-			Nothing -> return my_
-		stt <- get
-		let	sp = space stt
-			y = case maybeMaximum $ (place stt !?) <$> [x .. x + w + 1] of
-				Just yy -> yy
-				Nothing -> h
-			p = Pos x $ fromMaybe (y + sp) my
-	
-			dm = diagramMap stt
-			l = layout dm
-			l' = stump e p $ insert p e l
-			l'' = bool l' (insert (Pos (x - 2) $ posY p) HLine
-				$ insert (Pos (x - 1) $ posY p) HLine l' ) b
+		y <- calculateY e x my_
+		let	p = Pos x y
 		lp <- lift $ linePos e p
-		put stt {
-			elementPos = insert (elementId' eidg) lp $ elementPos stt,
-			diagramMap = dm { layout = l'' } }
-		(`updatePlace` (posY p + h')) `mapM_` [x .. x + w - 1]
-		expandWidth $ posX p + w + sp
-		expandHeight $ posY p + h + h' + 1 + sp
+		putElementPos eid lp
+		putE p e >> stump p e
+		when b $ putE (Pos (x - 2) y) HLine >> putE (Pos (x - 1) y) HLine
+		updatePlaceAndExpand p e
 		return $ Just lp
-	where ((w, (h, h')), _ps) = elementSpace e
+
+updatePlaceAndExpand :: Pos -> ElementDiagram -> DiagramMapM ()
+updatePlaceAndExpand (Pos x y) e = do
+	sp <- getSpace
+	(`updatePlace` (y + h')) `mapM_` [x .. x + w - 1]
+	expandWidth $ x + w + sp
+	expandHeight $ y + h' + sp
+	where ((w, (_, h')), _) = elementSpace e
 
 getElementPos :: ElementIdable eid => eid -> DiagramMapM LinePos
 getElementPos eidg = lift
