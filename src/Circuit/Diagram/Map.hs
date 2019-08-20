@@ -76,11 +76,9 @@ initDiagramMapState sp = DiagramMapState {
 	diagramMap = mkDiagramMap 0 0 }
 
 updatePlaceDMState :: DiagramMapState -> Int -> Int -> DiagramMapState
-updatePlaceDMState dms x y = dms { place = insert x y' ep }
-	where
-	ep = place dms
-	my0 = ep !? x
-	y' = maybe y (max y) $ my0
+updatePlaceDMState dms x y =
+	dms { place = insert x (maybe y (y `max`) $ pl !? x) pl }
+	where pl = place dms
 
 getWidthDMState, getHeightDMState :: DiagramMapState -> Int
 getWidthDMState = getWidthDiagramMap . diagramMap
@@ -173,10 +171,9 @@ putElementGen b [eidg] e x my_ = do
 				$ insert (Pos (x - 1) $ posY p) HLine l' ) b
 		lp <- lift $ linePos e p
 		put stt {
-			place = P.foldr (`insert` (max y (posY p + h')))
-				(place stt) [x .. x + w - 1],
 			elementPos = insert (elementId' eidg) lp $ elementPos stt,
 			diagramMap = dm { layout = l'' } }
+		(`updatePlace` (posY p + h')) `mapM_` [x .. x + w - 1]
 		expandWidth $ posX p + w + sp
 		expandHeight $ posY p + h + h' + 1 + sp
 		return $ Just lp
