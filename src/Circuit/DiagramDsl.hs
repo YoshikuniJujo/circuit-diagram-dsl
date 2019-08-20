@@ -20,10 +20,17 @@ module Circuit.DiagramDsl (
 	Element1,
 	ElementDiagram1, notGateD, delayD, hLineD, hLineTextD,
 	inputPosition0, connectLine0,
+
 	-- * 2 Input Lines
 	Element2,
 	ElementDiagram2, andGateD, orGateD, triGateD, branchD,
-	inputPosition1, inputPosition2, connectLine1, connectLine2
+	inputPosition1, inputPosition2, connectLine1, connectLine2,
+
+	-- * Element Block
+	ElementBlock,
+	ElementBlockDiagram, blockD,
+	putElementBlockEnd, putElementBlock, newElementBlockEnd, newElementBlock,
+	inputPositionBlock, connectLineBlock
 	) where
 
 
@@ -35,7 +42,7 @@ import Circuit.Diagram.Map hiding (
 	putElementGen,
 	inputPosition1, inputPosition2, connectLine1, connectLine2,
 	constGateD, notGateD, delayD, hLineD, hLineTextD,
-	andGateD, orGateD, triGateD, branchD, ElementDiagram )
+	andGateD, orGateD, triGateD, branchD, blockD, ElementDiagram )
 
 import qualified Circuit.Diagram.Map as M
 
@@ -148,3 +155,47 @@ inputPosition2 (NewElement2 _ lps) = M.inputPosition2 lps
 connectLine1, connectLine2 :: ElementIdable eid => Element2 eid -> eid -> DiagramMapM ()
 connectLine1 (NewElement2 eid1 _) eid2 = M.connectLine1 eid1 eid2
 connectLine2 (NewElement2 eid1 _) eid2 = M.connectLine2 eid1 eid2
+
+data ElementBlock a = ElementList a LinePos deriving Show
+
+data ElementBlockDiagram = BlockD Int String deriving Show
+
+blockD :: Int -> String ->ElementBlockDiagram
+blockD = BlockD
+
+toDiagramList :: Int -> ElementBlockDiagram -> M.ElementDiagram
+toDiagramList os (BlockD is t)  = M.blockD is os t
+
+putElementGenList :: ElementIdable eid =>
+	Bool -> [eid] -> ElementBlockDiagram -> Int -> Maybe Int ->
+	DiagramMapM (Maybe (ElementBlock eid))
+putElementGenList b eids ed x my = do
+	lp <- M.putElementGen b eids (toDiagramList (length eids) ed) x my
+	return $ ElementList (head eids) <$> lp
+
+putElementBlockEnd :: ElementIdable eid =>
+	[eid] -> ElementBlockDiagram -> DiagramMapM (Maybe (ElementBlock eid))
+putElementBlockEnd eids e = do
+	sp <- getSpace
+	putElementGenList True eids e sp Nothing
+
+putElementBlock :: ElementIdable eid =>
+	[eid] -> ElementBlockDiagram -> Pos ->
+	DiagramMapM (Maybe (ElementBlock eid))
+putElementBlock eids e (Pos x y) = putElementGenList False eids e x (Just y)
+
+newElementBlockEnd :: ElementIdable eid =>
+	[eid] -> ElementBlockDiagram -> DiagramMapM (ElementBlock eid)
+newElementBlockEnd eid e =
+	maybe (lift $ Left "Oops!") return =<< putElementBlockEnd eid e
+
+newElementBlock :: ElementIdable eid =>
+	[eid] -> ElementBlockDiagram -> Pos -> DiagramMapM (ElementBlock eid)
+newElementBlock eid e pos =
+	maybe (lift $ Left "Oops!") return =<< putElementBlock eid e pos
+
+inputPositionBlock :: Int -> ElementBlock eid -> DiagramMapM Pos
+inputPositionBlock i (ElementList _ lps) = M.inputPositionMulti i lps
+
+connectLineBlock :: ElementIdable eid => Int -> ElementBlock eid -> eid -> DiagramMapM ()
+connectLineBlock i (ElementList eid1 _) eid2 = M.connectLineMulti i eid1 eid2

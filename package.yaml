@@ -34,7 +34,6 @@ library:
   source-dirs: src
   exposed-modules:
     - Circuit.DiagramDsl
-    - Circuit.DiagramForTest
 
 tests:
   circuit-diagram-test:
@@ -109,8 +108,8 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - circuit-diagram-dsl
-  tryBlock:
-    main:                tryBlock.hs
+  tryBlockMore:
+    main:                tryBlockMore.hs
     source-dirs:         test
     ghc-options:
     - -threaded

@@ -149,17 +149,17 @@ withEnvelope' = flip withEnvelope
 blockD, blockDGen :: Int -> Int -> String -> Diagram B
 blockD is os t = moveTo (- 1 ^& (dy - 0.5)) $ blockDGen is os t # lwL 0.08
 	where
-	dy = fromIntegral (max is os) / 2
+	dy = fromIntegral (max (2 * is - 1) os) / 2
 
-blockDGen is os t = rect 1.6 (fromIntegral $ max is os) <>
+blockDGen is os t = rect 1.6 (fromIntegral $ max (2 * is - 1) os) <>
 	rotateBy (- 1 / 4) (text t) <>
 	blockDLines is os
 
 blockDLines :: Int -> Int -> Diagram B
 blockDLines is os =
-	mconcat (il <$> [0 .. fromIntegral is - 1]) <>
+	mconcat (il <$> [0, 2 .. fromIntegral (2 * (is - 1))]) <>
 	mconcat (ol <$> [0 .. fromIntegral os - 1])
 	where
-	h = fromIntegral $ max is os
+	h = fromIntegral $ max (2 * is - 1) os
 	il n = moveTo ((- 1) ^& (h / 2 - 0.5 - n)) (line' 0.2)
 	ol n = moveTo (1 ^& (h / 2 - 0.5 - n)) (line' (- 0.2))

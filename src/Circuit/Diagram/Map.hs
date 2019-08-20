@@ -147,13 +147,13 @@ maybeMaximum [] = Nothing
 maybeMaximum (Just x : xs) = Just $ maybe x (max x) $ maybeMaximum xs
 maybeMaximum (Nothing : xs) = maybeMaximum xs
 
-calculateY :: ElementDiagram -> Int -> Maybe Int -> DiagramMapM Int
-calculateY e x my_ = do
+calculateY :: ElementDiagram -> Int -> Int -> Maybe Int -> DiagramMapM Int
+calculateY e x_ x my_ = do
 	stt <- get
 	my <- case my_ of
 		Just y -> bool Nothing my_ . ((y > h) &&) <$> placeable e (Pos x y)
 		Nothing -> return Nothing
-	let	y = case maybeMaximum $ (place stt !?) <$> [x .. x + w + 1] of
+	let	y = case maybeMaximum $ (place stt !?) <$> [x_ .. x + w + 1] of
 			Just yy -> yy
 			Nothing -> h
 	sp <- getSpace
@@ -182,24 +182,32 @@ putElementPos eid lp = do
 	put stt { elementPos = insert (elementId' eid) lp $ elementPos stt }
 
 putElementGen :: ElementIdable eid => Bool -> [eid] -> ElementDiagram -> Int -> Maybe Int -> DiagramMapM (Maybe LinePos)
+putElementGen _ [] _ _ _ = return Nothing
 putElementGen b eids e x_ my_ = do
 	me <- gets ((!? elementId' (head eids)) . elementPos)
 	(\pe -> maybe pe (const $ return Nothing) me) $ do
-		y <- calculateY e x my_
+		y <- calculateY e x_ x my_
 		let	p = Pos x y
 		lps <- lift $ linePosMulti e p
 		zipWithM_ putElementPos eids lps
 		putE p e >> stump p e
+		putMoreLine (length eids) (length eids - 1) p
 		when b $ putEnd (length eids) (length eids - 1) p
 		updatePlaceAndExpand p e
-		return . Just $ head lps
+		return $ listToMaybe lps
 	where
 	x = x_ + length eids - 1
+
+putMoreLine :: Int -> Int -> Pos -> DiagramMapM ()
+putMoreLine _ n _ | n < 0 = return ()
+putMoreLine m n (Pos x y) = do
+	mapM_ (\dx -> putE (Pos (x - dx - 1) (y + n)) HLine) [0 .. m - 1]
+	putMoreLine m (n - 1) (Pos x y)
 
 putEnd :: Int -> Int -> Pos -> DiagramMapM ()
 putEnd _ n _ | n < 0 = return ()
 putEnd m n (Pos x y) = do
-	mapM_ (\dx -> putE (Pos (x - dx - 1) (y + n)) HLine) [0 .. m - 1]
+	mapM_ (\dx -> putE (Pos (x - dx - 1) (y + n)) HLine) [m]
 	putEnd m (n - 1) (Pos x y)
 
 updatePlaceAndExpand :: Pos -> ElementDiagram -> DiagramMapM ()
@@ -288,7 +296,7 @@ linePos BranchE (Pos x y) =
 linePos (BlockE is os _) (Pos x y) =
 	Right LinePos {
 		outputLinePos = (`Pos` y) <$> [x - os - 1 .. x - 1],
-		inputLinePos = Pos (x + 2) <$> [y .. y + is - 1] }
+		inputLinePos = Pos (x + 2) <$> [y, y + 2 .. y + (is - 1) * 2] }
 linePos e pos = Left $ "linePos " ++ show e ++ " " ++ show pos
 
 data DiagramMapAStar = DiagramMapAStar {
