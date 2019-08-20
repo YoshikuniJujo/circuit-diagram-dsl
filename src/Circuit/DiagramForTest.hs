@@ -2,8 +2,10 @@
 
 module Circuit.DiagramForTest (
 	drawDiagram,
-	DiagramMapM, execDiagramMapM, ElementId, Pos(..),
-	andGateD, blockD,
+	DiagramMapM, DiagramMapState,
+	execDiagramMapM, ElementId, Pos(..),
+	ElementDiagram, andGateD, blockD,
+	LinePos,
 	putElementGen,
 	inputPositionMulti,
 	connectLine1, connectLine2, connectLineMulti
