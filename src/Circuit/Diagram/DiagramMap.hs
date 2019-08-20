@@ -33,6 +33,7 @@ data ElementDiagram
 	| EndBottomLeft
 	| TShape | TInverted | TLeft | TRight | CrossDot | Cross
 	| HLineText String String
+	| BlockE Int Int String
 	deriving Show
 
 stump :: ElementDiagram -> Pos -> Map Pos ElementDiagram -> Map Pos ElementDiagram

@@ -30,9 +30,9 @@ module Circuit.DiagramDsl (
 import Control.Monad.Trans
 import Data.Word
 
-import Circuit.Diagram.Draw
+import Circuit.Diagram.Draw.Draw
 import Circuit.Diagram.Map hiding (
-	putElementGen, putElement, putElement0, newElement, newElement0,
+	putElementGen,
 	inputPosition1, inputPosition2, connectLine1, connectLine2,
 	constGateD, notGateD, delayD, hLineD, hLineTextD,
 	andGateD, orGateD, triGateD, branchD, ElementDiagram )
@@ -69,7 +69,7 @@ data ElementDiagram0 = ConstGateD Word64 deriving Show
 instance IsElementDiagram ElementDiagram0 where
 	type Element ElementDiagram0 = Element0
 	putElementGen b eid ed x my = do
-		_ <- M.putElementGen b eid (newToDiagram0 ed) x my
+		_ <- M.putElementGen b [eid] (newToDiagram0 ed) x my
 		return $ Just Element0
 
 constGateD :: Word64 -> ElementDiagram0
@@ -87,7 +87,7 @@ data ElementDiagram1
 instance IsElementDiagram ElementDiagram1 where
 	type Element ElementDiagram1 = Element1
 	putElementGen b eid ed x my = do
-		lp <- M.putElementGen b eid (newToDiagram1 ed) x my
+		lp <- M.putElementGen b [eid] (newToDiagram1 ed) x my
 		return $ NewElement1 eid <$> lp
 
 notGateD :: ElementDiagram1
@@ -122,7 +122,7 @@ data ElementDiagram2 =  AndGateD | OrGateD | TriGateD String String | BranchD
 instance IsElementDiagram ElementDiagram2 where
 	type Element ElementDiagram2 = Element2
 	putElementGen b eid ed x my = do
-		lp <- M.putElementGen b eid (newToDiagram2 ed) x my
+		lp <- M.putElementGen b [eid] (newToDiagram2 ed) x my
 		return $ NewElement2 eid <$> lp
 
 andGateD, orGateD :: ElementDiagram2

@@ -8,7 +8,7 @@ module Circuit.Diagram.Map (
 	andGateD, orGateD, notGateD, triGateD, constGateD, delayD,
 	hLineD, hLineTextD, branchD,
 	Pos(..), LinePos,
-	putElementGen, putElement0, putElement, newElement0, newElement,
+	putElementGen,
 	inputPosition, inputPosition1, inputPosition2,
 	connectLine, connectLine1, connectLine2,
 	getSpace ) where
@@ -80,7 +80,7 @@ updatePlaceDMState dms x y = dms { place = insert x y' ep }
 	where
 	ep = place dms
 	my0 = ep !? x
-	y' = maybe (y + 1) (max $ y + 1) $ my0
+	y' = maybe y (max y) $ my0
 
 getWidthDMState, getHeightDMState :: DiagramMapState -> Int
 getWidthDMState = getWidthDiagramMap . diagramMap
@@ -135,34 +135,30 @@ execDiagramMapM :: DiagramMapM a -> Int -> Either String DiagramMap
 execDiagramMapM dmm sp =
 	diagramMap <$> dmm `execStateT` initDiagramMapState sp
 
-newElement0 :: ElementIdable eid => eid -> ElementDiagram -> DiagramMapM LinePos
-newElement0 eid e = maybe (lift $ Left "Oops!") return =<< putElement0 eid e
-
-newElement :: ElementIdable ied => ied -> ElementDiagram -> Pos -> DiagramMapM LinePos
-newElement eid e p = maybe (lift $ Left "Oops!") return =<< putElement eid e p
-
-putElement0 :: ElementIdable eid => eid -> ElementDiagram -> DiagramMapM (Maybe LinePos)
-putElement0 eid e = do
-	sp <- getSpace
-	putElementGen True eid e sp Nothing
-
-putElement :: ElementIdable eid => eid -> ElementDiagram -> Pos -> DiagramMapM (Maybe LinePos)
-putElement eid e (Pos x y) = putElementGen False eid e x (Just y)
-
 maybeMaximum :: Ord a => [Maybe a] -> Maybe a
 maybeMaximum [] = Nothing
 maybeMaximum (Just x : xs) = Just $ maybe x (max x) $ maybeMaximum xs
 maybeMaximum (Nothing : xs) = maybeMaximum xs
 
-putElementGen :: ElementIdable eid => Bool -> eid -> ElementDiagram -> Int -> Maybe Int -> DiagramMapM (Maybe LinePos)
-putElementGen b eidg e x my_ = do
+{-
+calculateY :: ElementDiagram -> Int -> Maybe Int -> DiagramMapM Int
+calculateY e -> x my_ = do
+	my <- case my_ of
+		Just y -> Bool Nothing my_ . ((y > h) &&) <$> placeable e (Pos x y)
+		Nothing -> return Nothing
+	let	y = case maybeMaximum $ (place stt !?) <$> [x .. x + w + 1] of
+			Just yy -> yy
+			Nothing -> h
+	where ((w, (h, h')), _ps) = elementSpace e
+	-}
+
+putElementGen :: ElementIdable eid => Bool -> [eid] -> ElementDiagram -> Int -> Maybe Int -> DiagramMapM (Maybe LinePos)
+putElementGen b [eidg] e x my_ = do
 	me <- gets ((!? elementId' eidg) . elementPos)
 	(\pe -> maybe pe (const $ return Nothing) me) $ do
-		let	((w, (h, h')), _ps) = elementSpace e
-		my <- do
-			case my_ of
-				Just y -> bool Nothing my_ . ((y > h) &&) <$> placeable e (Pos x y)
-				Nothing -> return my_
+		my <- case my_ of
+			Just y -> bool Nothing my_ . ((y > h) &&) <$> placeable e (Pos x y)
+			Nothing -> return my_
 		stt <- get
 		let	sp = space stt
 			y = case maybeMaximum $ (place stt !?) <$> [x .. x + w + 1] of
@@ -184,6 +180,7 @@ putElementGen b eidg e x my_ = do
 		expandWidth $ posX p + w + sp
 		expandHeight $ posY p + h + h' + 1 + sp
 		return $ Just lp
+	where ((w, (h, h')), _ps) = elementSpace e
 
 getElementPos :: ElementIdable eid => eid -> DiagramMapM LinePos
 getElementPos eidg = lift
@@ -303,6 +300,9 @@ connectLine, connectLine1, connectLine2 :: ElementIdable eid => eid -> eid -> Di
 connectLine ei eo = (`connectLine'` eo) =<< lift . single =<< getInputPos ei
 connectLine1 ei eo = (`connectLine'` eo) =<< lift . oneOfTwo =<< getInputPos ei
 connectLine2 ei eo = (`connectLine'` eo) =<< lift . twoOfTwo =<< getInputPos ei
+
+connectLineMulti :: ElementIdable eid => Int -> eid -> eid -> DiagramMapM ()
+connectLineMulti n ei eo = (`connectLine'` eo) . (!! n) =<< getInputPos ei
 
 single :: [a] -> Either String a
 single [x] = Right x

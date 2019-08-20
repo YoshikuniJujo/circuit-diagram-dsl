@@ -1,13 +1,13 @@
 {-# OPTIONS_GHC -Wall -fno-warn-tabs #-}
 
-module Circuit.Diagram.Draw (drawDiagram) where
+module Circuit.Diagram.Draw.Draw (drawDiagram) where
 
 import Data.Map.Strict
 import Diagrams.Prelude (Diagram, moveTo, (^&), (===))
 import Diagrams.Backend.SVG
 
 import Circuit.Diagram.DiagramMap
-import Circuit.Diagram.Pictures
+import Circuit.Diagram.Draw.Pictures
 
 drawDiagram :: DiagramMap -> Diagram B
 drawDiagram DiagramMap { width = w, height = h, layout = l } = mconcat
