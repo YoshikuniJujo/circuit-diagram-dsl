@@ -26,6 +26,7 @@ drawElement (ConstGateE bs) = constGateD bs
 drawElement (DelayE d) = delayD d
 drawElement HLine = hlineD
 drawElement EndHLine = hlineD
+drawElement EndHLineR = hlineD
 drawElement (HLineText t1 t2) = hlineTextD t1 t2
 drawElement VLine = vlineD
 drawElement Stump = mempty
@@ -42,4 +43,5 @@ drawElement TRight = trshapeD
 drawElement Cross = crossD
 drawElement CrossDot = crossDotD
 drawElement BranchE = tshapeD === vlineD === vlineD === topLeftD
+drawElement (BlockE is os t) = blockD is os t
 drawElement e = error $ "Circuit.Diagram.Draw.drawElement: not yet implemented: " ++ show e

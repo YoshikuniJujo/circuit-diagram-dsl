@@ -58,6 +58,7 @@ elementSpaceInput (DelayE _) = [(2, 0)]
 elementSpaceInput BranchE = [(1, 0), (1, 3)]
 elementSpaceInput HLine = [(1, 0)]
 elementSpaceInput (HLineText _ _) = [(1, 0)]
+elementSpaceInput (BlockE is _ _) = (1 ,) <$> [0 .. is - 1]
 elementSpaceInput _ = []
 
 elementSpaceGen :: ElementDiagram -> (Int, (Int, Int))
@@ -68,6 +69,7 @@ elementSpaceGen (ConstGateE _) = (3, (0, 0))
 elementSpaceGen (TriGateE _ _) = (2, (3, 1))
 elementSpaceGen (DelayE _) = (2, (0, 0))
 elementSpaceGen BranchE = (1, (0, 3))
+elementSpaceGen (BlockE is os _) = (2, (0, max is os - 1))
 elementSpaceGen _ = (1, (0, 0))
 
 elementToPositions :: ElementDiagram -> Pos -> [Pos]

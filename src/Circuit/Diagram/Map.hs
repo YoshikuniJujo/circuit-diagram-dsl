@@ -6,11 +6,11 @@ module Circuit.Diagram.Map (
 	DiagramMap, ElementIdable(..), ElementId,
 	ElementDiagram,
 	andGateD, orGateD, notGateD, triGateD, constGateD, delayD,
-	hLineD, hLineTextD, branchD,
+	hLineD, hLineTextD, branchD, blockD,
 	Pos(..), LinePos,
 	putElementGen,
-	inputPosition, inputPosition1, inputPosition2,
-	connectLine, connectLine1, connectLine2,
+	inputPosition, inputPosition1, inputPosition2, inputPositionMulti,
+	connectLine, connectLine1, connectLine2, connectLineMulti,
 	getSpace ) where
 
 import Prelude as P
@@ -18,6 +18,7 @@ import Prelude as P
 import Control.Arrow
 import Control.Monad.State
 import Data.Maybe
+import Data.List (transpose)
 import Data.Map.Strict
 import Data.Bool
 import Data.Word
@@ -48,6 +49,9 @@ delayD = DelayE
 
 hLineTextD :: String -> String -> ElementDiagram
 hLineTextD = HLineText
+
+blockD :: Int -> Int -> String -> ElementDiagram
+blockD = BlockE
 
 newtype ElementId = ElementId BS.ByteString deriving (Show, Eq, Ord)
 
@@ -122,6 +126,9 @@ inputPosition1, inputPosition2 :: LinePos -> DiagramMapM Pos
 inputPosition1 lp = lift . calcInputPosition1 lp =<< getSpace
 inputPosition2 lp = lift . calcInputPosition2 lp =<< getSpace
 
+inputPositionMulti :: Int -> LinePos -> DiagramMapM Pos
+inputPositionMulti i lp = lift . calcInputPositionMulti i lp =<< getSpace
+
 getElementFromPos :: Pos -> DiagramMapM (Maybe ElementDiagram)
 getElementFromPos pos = do
 	dm <- getDiagramMap
@@ -175,17 +182,25 @@ putElementPos eid lp = do
 	put stt { elementPos = insert (elementId' eid) lp $ elementPos stt }
 
 putElementGen :: ElementIdable eid => Bool -> [eid] -> ElementDiagram -> Int -> Maybe Int -> DiagramMapM (Maybe LinePos)
-putElementGen b [eid] e x my_ = do
-	me <- gets ((!? elementId' eid) . elementPos)
+putElementGen b eids e x_ my_ = do
+	me <- gets ((!? elementId' (head eids)) . elementPos)
 	(\pe -> maybe pe (const $ return Nothing) me) $ do
 		y <- calculateY e x my_
 		let	p = Pos x y
-		lp <- lift $ linePos e p
-		putElementPos eid lp
+		lps <- lift $ linePosMulti e p
+		zipWithM_ putElementPos eids lps
 		putE p e >> stump p e
-		when b $ putE (Pos (x - 2) y) HLine >> putE (Pos (x - 1) y) HLine
+		when b $ putEnd (length eids) (length eids - 1) p
 		updatePlaceAndExpand p e
-		return $ Just lp
+		return . Just $ head lps
+	where
+	x = x_ + length eids - 1
+
+putEnd :: Int -> Int -> Pos -> DiagramMapM ()
+putEnd _ n _ | n < 0 = return ()
+putEnd m n (Pos x y) = do
+	mapM_ (\dx -> putE (Pos (x - dx - 1) (y + n)) HLine) [0 .. m - 1]
+	putEnd m (n - 1) (Pos x y)
 
 updatePlaceAndExpand :: Pos -> ElementDiagram -> DiagramMapM ()
 updatePlaceAndExpand (Pos x y) e = do
@@ -234,6 +249,19 @@ calcInputPosition1 lp dx = Left $ "calcInputPosition1 " ++ show lp ++ " " ++ sho
 calcInputPosition2 LinePos { inputLinePos = [_, ip] } dx = Right $ Pos (posX ip + dx) (posY ip)
 calcInputPosition2 lp dx = Left $ "calcInputPosition2 " ++ show lp ++ " " ++ show dx
 
+calcInputPositionMulti :: Int -> LinePos -> Int -> Either String Pos
+calcInputPositionMulti i LinePos { inputLinePos = ilp } dx = Right $ Pos (posX (ilp !! i) + dx) (posY (ilp !! i))
+
+succYs :: [Pos] -> [[Pos]]
+succYs ps = transpose $ succYs1 <$> ps
+
+succYs1 :: Pos -> [Pos]
+succYs1 (Pos x y) = Pos x <$> [y ..]
+
+linePosMulti :: ElementDiagram -> Pos -> Either String [LinePos]
+linePosMulti e = either Left
+	(Right . (\(LinePos op ip) -> (`LinePos` ip) <$> succYs op)) . linePos e
+
 linePos :: ElementDiagram -> Pos -> Either String LinePos
 linePos AndGateE (Pos x y) = Right LinePos {
 	outputLinePos = [Pos (x - 1) y],
@@ -257,6 +285,10 @@ linePos BranchE (Pos x y) =
 	Right LinePos {
 		outputLinePos = [Pos (x - 1) y],
 		inputLinePos = [Pos (x + 1) y, Pos (x + 1) (y + 3)] }
+linePos (BlockE is os _) (Pos x y) =
+	Right LinePos {
+		outputLinePos = (`Pos` y) <$> [x - os - 1 .. x - 1],
+		inputLinePos = Pos (x + 2) <$> [y .. y + is - 1] }
 linePos e pos = Left $ "linePos " ++ show e ++ " " ++ show pos
 
 data DiagramMapAStar = DiagramMapAStar {

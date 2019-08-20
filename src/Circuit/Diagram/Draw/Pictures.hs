@@ -5,7 +5,7 @@ module Circuit.Diagram.Draw.Pictures (
 	andGateD, orGateD, notGateD, triGateD, constGateD, delayD,
 	hlineD, vlineD, topLeftD, bottomLeftD, topRightD, bottomRightD,
 	tshapeD, tishapeD, tlshapeD, trshapeD, crossD, crossDotD,
-	hlineTextD ) where
+	hlineTextD, blockD ) where
 
 import Data.Word
 import Numeric
@@ -145,3 +145,21 @@ orGate3 = (arcBetween (p2 (- 0.3, 1.3)) (p2 (1.1, 0)) 0.2 === arcBetween (p2 (- 
 withEnvelope' :: (InSpace v n a, Monoid' m, Enveloped a) =>
 	QDiagram b v n m -> a -> QDiagram b v n m
 withEnvelope' = flip withEnvelope
+
+blockD, blockDGen :: Int -> Int -> String -> Diagram B
+blockD is os t = moveTo (- 1 ^& (dy - 0.5)) $ blockDGen is os t # lwL 0.08
+	where
+	dy = fromIntegral (max is os) / 2
+
+blockDGen is os t = rect 1.6 (fromIntegral $ max is os) <>
+	rotateBy (- 1 / 4) (text t) <>
+	blockDLines is os
+
+blockDLines :: Int -> Int -> Diagram B
+blockDLines is os =
+	mconcat (il <$> [0 .. fromIntegral is - 1]) <>
+	mconcat (ol <$> [0 .. fromIntegral os - 1])
+	where
+	h = fromIntegral $ max is os
+	il n = moveTo ((- 1) ^& (h / 2 - 0.5 - n)) (line' 0.2)
+	ol n = moveTo (1 ^& (h / 2 - 0.5 - n)) (line' (- 0.2))
