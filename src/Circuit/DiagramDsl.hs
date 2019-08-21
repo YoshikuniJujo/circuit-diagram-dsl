@@ -5,9 +5,12 @@ module Circuit.DiagramDsl (
 	-- * drawDiagram
 	drawDiagram,
 
-	-- * DiagramMapM, DiagramMap, ElementIdable and so on
-	DiagramMapM, runDiagramMapM, execDiagramMapM,
-	DiagramMap, ElementIdable(..), ElementId, Pos,
+	-- * DiagramMapM, DiagramMap
+	DiagramMapM, DiagramMapState, runDiagramMapM, execDiagramMapM,
+	DiagramMap,
+
+	-- * Other Types
+	ElementIdable(..), ElementId, Pos,
 
 	-- * putElement
 	IsElementDiagram, Element,

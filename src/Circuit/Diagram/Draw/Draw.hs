@@ -44,4 +44,4 @@ drawElement Cross = crossD
 drawElement CrossDot = crossDotD
 drawElement BranchE = tshapeD === vlineD === vlineD === topLeftD
 drawElement (BlockE is os t) = blockD is os t
-drawElement e = error $ "Circuit.Diagram.Draw.drawElement: not yet implemented: " ++ show e
+-- drawElement e = error $ "Circuit.Diagram.Draw.drawElement: not yet implemented: " ++ show e
