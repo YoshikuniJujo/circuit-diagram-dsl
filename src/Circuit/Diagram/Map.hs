@@ -155,9 +155,9 @@ calculateY e x_ x my_ = do
 		Nothing -> return Nothing
 	let	y = case maybeMaximum $ (place stt !?) <$> [x_ .. x + w + 1] of
 			Just yy -> yy
-			Nothing -> h
+			Nothing -> 0
 	sp <- getSpace
-	return $ fromMaybe (y + sp) my
+	return $ fromMaybe (y + h + sp) my
 	where ((w, (h, _h')), _ps) = elementSpace e
 
 putE :: Pos -> ElementDiagram -> DiagramMapM ()
