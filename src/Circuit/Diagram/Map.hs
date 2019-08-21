@@ -161,12 +161,13 @@ calculateY e x_ x my_ = do
 	where ((w, (h, _h')), _ps) = elementSpace e
 
 putE :: Pos -> ElementDiagram -> DiagramMapM ()
-putE p e = do
+putE p@(Pos x y) e = do
 	stt <- get
 	let	dm = diagramMap stt
 		l = layout dm
 		l' = insert p e l
 	put stt { diagramMap = dm { layout = l' } }
+	updatePlace x y
 
 stump :: Pos -> ElementDiagram -> DiagramMapM ()
 stump p e = do
