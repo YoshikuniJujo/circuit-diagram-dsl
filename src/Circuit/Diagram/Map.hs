@@ -76,7 +76,7 @@ data DiagramMapState = DiagramMapState {
 
 initDiagramMapState :: Int -> DiagramMapState
 initDiagramMapState sp = DiagramMapState {
-	space = sp,
+	space = sp + 2,
 	place = empty,
 	elementPos = empty,
 	diagramMap = mkDiagramMap 0 0 }

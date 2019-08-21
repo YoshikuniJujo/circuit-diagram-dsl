@@ -7,7 +7,7 @@ import Diagrams.Backend.SVG (renderSVG)
 import Circuit.DiagramDsl
 
 main :: IO ()
-main = case sample2 `execDiagramMapM` 2 of
+main = case sample2 `execDiagramMapM` 0 of
 	Right s2 -> renderSVG "sample5.svg" (mkWidth 600) $ drawDiagram s2
 	Left emsg -> putStrLn $ "no diagram: " ++ emsg
 
