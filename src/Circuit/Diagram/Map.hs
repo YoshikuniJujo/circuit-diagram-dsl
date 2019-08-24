@@ -6,17 +6,19 @@ module Circuit.Diagram.Map (
 	DiagramMap, ElementIdable(..), ElementId,
 	ElementDiagram,
 	andGateD, orGateD, notGateD, triGateD, constGateD, delayD,
-	hLineD, hLineTextD, branchD,
-	Pos, LinePos,
-	putElement0, putElement, newElement0, newElement,
-	inputPosition, inputPosition1, inputPosition2,
-	connectLine, connectLine1, connectLine2 ) where
+	hLineD, hLineTextD, branchD, blockD,
+	Pos(..), LinePos,
+	putElementGen,
+	inputPosition, inputPosition1, inputPosition2, inputPositionMulti,
+	connectLine, connectLine1, connectLine2, connectLineMulti,
+	getSpace ) where
 
 import Prelude as P
 
 import Control.Arrow
 import Control.Monad.State
 import Data.Maybe
+import Data.List (transpose)
 import Data.Map.Strict
 import Data.Bool
 import Data.Word
@@ -28,14 +30,16 @@ import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteArray as BA
 
 import AStar.AStar
-import Circuit.Diagram.DiagramMap
+import Circuit.Diagram.DiagramMap hiding (stump)
 
-andGateD, orGateD, notGateD, triGateD, hLineD, branchD :: ElementDiagram
-[andGateD, orGateD, notGateD, triGateD, hLineD, branchD] =
-	[AndGateE, OrGateE, NotGateE, TriGateE, HLine, BranchE]
+import qualified Circuit.Diagram.DiagramMap as DM
 
-hLineTextD :: String -> String -> ElementDiagram
-hLineTextD = HLineText
+andGateD, orGateD, notGateD, hLineD, branchD :: ElementDiagram
+[andGateD, orGateD, notGateD, hLineD, branchD] =
+	[AndGateE, OrGateE, NotGateE, HLine, BranchE]
+
+triGateD :: String -> String -> ElementDiagram
+triGateD = TriGateE
 
 constGateD :: Word64 -> ElementDiagram
 constGateD = ConstGateE
@@ -43,19 +47,25 @@ constGateD = ConstGateE
 delayD :: Word8 -> ElementDiagram
 delayD = DelayE
 
+hLineTextD :: String -> String -> ElementDiagram
+hLineTextD = HLineText
+
+blockD :: Int -> Int -> String -> ElementDiagram
+blockD = BlockE
+
 newtype ElementId = ElementId BS.ByteString deriving (Show, Eq, Ord)
 
 instance IsString ElementId where
 	fromString = ElementId . BA.convert . hash @_ @SHA3_256 . BSC.pack
 
 class ElementIdable a where
-	elementIdGen :: a -> BS.ByteString
+	elementId :: a -> BS.ByteString
 
-elementId :: ElementIdable eid => eid -> ElementId
-elementId = ElementId . elementIdGen
+elementId' :: ElementIdable eid => eid -> ElementId
+elementId' = ElementId . elementId
 
 instance ElementIdable ElementId where
-	elementIdGen (ElementId bs) = bs
+	elementId (ElementId bs) = bs
 
 data DiagramMapState = DiagramMapState {
 	space :: Int,
@@ -66,17 +76,15 @@ data DiagramMapState = DiagramMapState {
 
 initDiagramMapState :: Int -> DiagramMapState
 initDiagramMapState sp = DiagramMapState {
-	space = sp,
+	space = sp + 2,
 	place = empty,
 	elementPos = empty,
 	diagramMap = mkDiagramMap 0 0 }
 
 updatePlaceDMState :: DiagramMapState -> Int -> Int -> DiagramMapState
-updatePlaceDMState dms x y = dms { place = insert x y' ep }
-	where
-	ep = place dms
-	my0 = ep !? x
-	y' = maybe (y + 1) (max $ y + 1) $ my0
+updatePlaceDMState dms x y =
+	dms { place = insert x (maybe y (y `max`) $ pl !? x) pl }
+	where pl = place dms
 
 getWidthDMState, getHeightDMState :: DiagramMapState -> Int
 getWidthDMState = getWidthDiagramMap . diagramMap
@@ -118,6 +126,9 @@ inputPosition1, inputPosition2 :: LinePos -> DiagramMapM Pos
 inputPosition1 lp = lift . calcInputPosition1 lp =<< getSpace
 inputPosition2 lp = lift . calcInputPosition2 lp =<< getSpace
 
+inputPositionMulti :: Int -> LinePos -> DiagramMapM Pos
+inputPositionMulti i lp = lift . calcInputPositionMulti i lp =<< getSpace
+
 getElementFromPos :: Pos -> DiagramMapM (Maybe ElementDiagram)
 getElementFromPos pos = do
 	dm <- getDiagramMap
@@ -131,51 +142,88 @@ execDiagramMapM :: DiagramMapM a -> Int -> Either String DiagramMap
 execDiagramMapM dmm sp =
 	diagramMap <$> dmm `execStateT` initDiagramMapState sp
 
-newElement0 :: ElementIdable eid => eid -> ElementDiagram -> DiagramMapM LinePos
-newElement0 eid e = maybe (lift $ Left "Oops!") return =<< putElement0 eid e
+maybeMaximum :: Ord a => [Maybe a] -> Maybe a
+maybeMaximum [] = Nothing
+maybeMaximum (Just x : xs) = Just $ maybe x (max x) $ maybeMaximum xs
+maybeMaximum (Nothing : xs) = maybeMaximum xs
 
-newElement :: ElementIdable ied => ied -> ElementDiagram -> Pos -> DiagramMapM LinePos
-newElement eid e p = maybe (lift $ Left "Oops!") return =<< putElement eid e p
+calculateY :: ElementDiagram -> Int -> Int -> Maybe Int -> DiagramMapM Int
+calculateY e x_ x my_ = do
+	stt <- get
+	my <- case my_ of
+		Just y -> bool Nothing my_ . ((y > h) &&) <$> placeable e (Pos x y)
+		Nothing -> return Nothing
+	let	y = case maybeMaximum $ (place stt !?) <$> [x_ .. x + w + 1] of
+			Just yy -> yy
+			Nothing -> 0
+	sp <- getSpace
+	return $ fromMaybe (y + h + sp) my
+	where ((w, (h, _h')), _ps) = elementSpace e
 
-putElement0 :: ElementIdable eid => eid -> ElementDiagram -> DiagramMapM (Maybe LinePos)
-putElement0 eid e = putElementGen True eid e 2 Nothing
+putE :: Pos -> ElementDiagram -> DiagramMapM ()
+putE p@(Pos x y) e = do
+	stt <- get
+	let	dm = diagramMap stt
+		l = layout dm
+		l' = insert p e l
+	put stt { diagramMap = dm { layout = l' } }
+	updatePlace x y
 
-putElement :: ElementIdable eid => eid -> ElementDiagram -> Pos -> DiagramMapM (Maybe LinePos)
-putElement eid e (Pos x y) = putElementGen False eid e x (Just y)
+stump :: Pos -> ElementDiagram -> DiagramMapM ()
+stump p e = do
+	stt <- get
+	let	dm = diagramMap stt
+		l = layout dm
+		l' = DM.stump e p l
+	put stt { diagramMap = dm { layout = l' } }
 
-putElementGen :: ElementIdable eid => Bool -> eid -> ElementDiagram -> Int -> Maybe Int -> DiagramMapM (Maybe LinePos)
-putElementGen b eidg e x my_ = do
-	me <- gets ((!? elementId eidg) . elementPos)
+putElementPos :: ElementIdable eid => eid -> LinePos -> DiagramMapM ()
+putElementPos eid lp = do
+	stt <- get
+	put stt { elementPos = insert (elementId' eid) lp $ elementPos stt }
+
+putElementGen :: ElementIdable eid => Bool -> [eid] -> ElementDiagram -> Int -> Maybe Int -> DiagramMapM (Maybe LinePos)
+putElementGen _ [] _ _ _ = return Nothing
+putElementGen b eids e x_ my_ = do
+	me <- gets ((!? elementId' (head eids)) . elementPos)
 	(\pe -> maybe pe (const $ return Nothing) me) $ do
-		let	(w, (h, h')) = elementSpace e
-		my <- do
-			case my_ of
-				Just y -> bool Nothing my_ . ((y > (w - 1) `div` 2) &&) <$> placeable e (Pos x y)
-				Nothing -> return my_
-		stt <- get
-		let	sp = space stt
-			y = fromMaybe 1 $ place stt !? x
-			p = Pos x $ fromMaybe y my
-	
-			dm = diagramMap stt
-			l = layout dm
-			l' = stump e p $ insert p e l
-			l'' = bool l' (insert (Pos (x - 1) $ posY p) HLine l') b
-		lp <- lift $ linePos e p
-		put stt {
-			place = P.foldr (`insert` (max y (posY p) + h + h' + 1 + fromIntegral sp))
-				(place stt) [x .. x + w - 1],
-			elementPos = insert (elementId eidg) lp $ elementPos stt,
-			diagramMap = dm { layout = l'' } }
-		expandWidth $ posX p + w + sp
-		expandHeight $ posY p + h + h' + 1 + sp
-		return $ Just lp
+		y <- calculateY e x_ x my_
+		let	p = Pos x y
+		lps <- lift $ linePosMulti e p
+		zipWithM_ putElementPos eids lps
+		putE p e >> stump p e
+		putMoreLine (length eids) (length eids - 1) p
+		when b $ putEnd (length eids) (length eids - 1) p
+		updatePlaceAndExpand p e
+		return $ listToMaybe lps
+	where
+	x = x_ + length eids - 1
+
+putMoreLine :: Int -> Int -> Pos -> DiagramMapM ()
+putMoreLine _ n _ | n < 0 = return ()
+putMoreLine m n (Pos x y) = do
+	mapM_ (\dx -> putE (Pos (x - dx - 1) (y + n)) HLine) [0 .. m - 1]
+	putMoreLine m (n - 1) (Pos x y)
+
+putEnd :: Int -> Int -> Pos -> DiagramMapM ()
+putEnd _ n _ | n < 0 = return ()
+putEnd m n (Pos x y) = do
+	mapM_ (\dx -> putE (Pos (x - dx - 1) (y + n)) HLine) [m]
+	putEnd m (n - 1) (Pos x y)
+
+updatePlaceAndExpand :: Pos -> ElementDiagram -> DiagramMapM ()
+updatePlaceAndExpand (Pos x y) e = do
+	sp <- getSpace
+	(`updatePlace` (y + h')) `mapM_` [x .. x + w - 1]
+	expandWidth $ x + w + sp
+	expandHeight $ y + h' + sp
+	where ((w, (_, h')), _) = elementSpace e
 
 getElementPos :: ElementIdable eid => eid -> DiagramMapM LinePos
 getElementPos eidg = lift
-	=<< gets (maybe (Left emsg) Right . (!? elementId eidg) . elementPos)
+	=<< gets (maybe (Left emsg) Right . (!? elementId' eidg) . elementPos)
 	where emsg = "No such element: " ++
-		"Circuit.Diagram.Map.getElementPos " ++ show (elementId eidg)
+		"Circuit.Diagram.Map.getElementPos " ++ show (elementId' eidg)
 
 getInputPos :: ElementIdable eid => eid -> DiagramMapM [Pos]
 getInputPos = (inputLinePos <$>) . getElementPos
@@ -210,6 +258,19 @@ calcInputPosition1 lp dx = Left $ "calcInputPosition1 " ++ show lp ++ " " ++ sho
 calcInputPosition2 LinePos { inputLinePos = [_, ip] } dx = Right $ Pos (posX ip + dx) (posY ip)
 calcInputPosition2 lp dx = Left $ "calcInputPosition2 " ++ show lp ++ " " ++ show dx
 
+calcInputPositionMulti :: Int -> LinePos -> Int -> Either String Pos
+calcInputPositionMulti i LinePos { inputLinePos = ilp } dx = Right $ Pos (posX (ilp !! i) + dx) (posY (ilp !! i))
+
+succYs :: [Pos] -> [[Pos]]
+succYs ps = transpose $ succYs1 <$> ps
+
+succYs1 :: Pos -> [Pos]
+succYs1 (Pos x y) = Pos x <$> [y ..]
+
+linePosMulti :: ElementDiagram -> Pos -> Either String [LinePos]
+linePosMulti e = either Left
+	(Right . (\(LinePos op ip) -> (`LinePos` ip) <$> succYs op)) . linePos e
+
 linePos :: ElementDiagram -> Pos -> Either String LinePos
 linePos AndGateE (Pos x y) = Right LinePos {
 	outputLinePos = [Pos (x - 1) y],
@@ -217,10 +278,10 @@ linePos AndGateE (Pos x y) = Right LinePos {
 linePos OrGateE p = linePos AndGateE p
 linePos NotGateE (Pos x y) =
 	Right LinePos { outputLinePos = [Pos (x - 1) y], inputLinePos = [Pos (x + 2) y] }
-linePos TriGateE (Pos x y) =
+linePos (TriGateE _ _) (Pos x y) =
 	Right LinePos {
 		outputLinePos = [Pos (x - 1) y],
-		inputLinePos = [Pos (x + 2) (y - 2), Pos (x + 2) y] }
+		inputLinePos = [Pos (x + 2) (y - 3), Pos (x + 2) y] }
 linePos (ConstGateE _) (Pos x y) =
 	Right LinePos { outputLinePos = [Pos (x - 1) y], inputLinePos = [] }
 linePos (DelayE _) (Pos x y) =
@@ -232,7 +293,11 @@ linePos (HLineText _ _) (Pos x y) =
 linePos BranchE (Pos x y) =
 	Right LinePos {
 		outputLinePos = [Pos (x - 1) y],
-		inputLinePos = [Pos (x + 1) y, Pos (x + 1) (y + 1)] }
+		inputLinePos = [Pos (x + 1) y, Pos (x + 1) (y + 3)] }
+linePos (BlockE is os _) (Pos x y) =
+	Right LinePos {
+		outputLinePos = (`Pos` y) <$> [x - os - 1 .. x - 1],
+		inputLinePos = Pos (x + 2) <$> [y, y + 2 .. y + (is - 1) * 2] }
 linePos e pos = Left $ "linePos " ++ show e ++ " " ++ show pos
 
 data DiagramMapAStar = DiagramMapAStar {
@@ -249,36 +314,49 @@ instance AStar DiagramMapAStar where
 	type AStarNode DiagramMapAStar = Pos
 	startNode = startLine
 	isEndNode = flip elem . endLine
-	nextNodes = (((, 1) <$>) .) . nextPosDiagramMap
+	nextNodes = nextPosDiagramMap
 	distToEnd = distance . endLine
 
-nextPosDiagramMap :: DiagramMapAStar -> Pos -> [Pos]
-nextPosDiagramMap dma (Pos x0 y0) = [ p |
+nextPosDiagramMap :: DiagramMapAStar -> Pos -> [(Pos, Dist)]
+nextPosDiagramMap dma (Pos x0 y0) = [ pd |
 	p@(Pos x y) <- [Pos (x0 - 1) y0, Pos (x0 + 1) y0, Pos x0 (y0 - 1), Pos x0 (y0 + 1)],
 	0 <= x, x < w, 0 <= y, y < h,
-	isEndNode dma (Pos x y) || y == y0 && checkHorizontal l p || x == x0 && checkVertical l p ]
+	pd <-	[ (p, 1) | isEndNode dma p ] ++
+		[ pd' | y == y0, pd' <- maybeToList $ horizontal dma l (x - x0) p 1 ] ++
+		[ pd' | x == x0, pd' <- maybeToList $ vertical dma l (y - y0) p 1 ] ]
 	where
 	dm = diagramMapA dma
 	l = layout dm
 	w = width dm
 	h = height dm
 
-checkHorizontal, checkVertical :: Map Pos ElementDiagram -> Pos -> Bool
-checkHorizontal l p = case l !? p of
-	Just VLine -> True
-	Just _ -> False
-	Nothing -> True
+horizontal, vertical :: DiagramMapAStar -> Map Pos ElementDiagram -> Int -> Pos -> Dist -> Maybe (Pos, Dist)
+horizontal dma l dr p@(Pos x y) ds = case l !? p of
+	Just VLine
+		| isEndNode dma p' -> Just (p', ds + 1)
+		| otherwise -> horizontal dma l dr p' (ds + 1)
+	Just _ -> Nothing
+	Nothing -> Just (p, ds)
+	where p' = Pos (x + dr) y
 
-checkVertical l p = case  l !? p of
-	Just HLine -> True
-	Just EndHLine -> True
-	Just _ -> False
-	Nothing -> True
+vertical dma l dr p@(Pos x y) ds = case  l !? p of
+	Just HLine
+		| isEndNode dma p' -> Just (p', ds + 1)
+		| otherwise -> vertical dma l dr p' (ds + 1)
+	Just EndHLine
+		| isEndNode dma p' -> Just (p', ds + 1)
+		| otherwise -> vertical dma l dr p' (ds + 1)
+	Just _ -> Nothing
+	Nothing -> Just (p, ds)
+	where p' = Pos x (y + dr)
 
 connectLine, connectLine1, connectLine2 :: ElementIdable eid => eid -> eid -> DiagramMapM ()
 connectLine ei eo = (`connectLine'` eo) =<< lift . single =<< getInputPos ei
 connectLine1 ei eo = (`connectLine'` eo) =<< lift . oneOfTwo =<< getInputPos ei
 connectLine2 ei eo = (`connectLine'` eo) =<< lift . twoOfTwo =<< getInputPos ei
+
+connectLineMulti :: ElementIdable eid => Int -> eid -> eid -> DiagramMapM ()
+connectLineMulti n ei eo = (`connectLine'` eo) . (!! n) =<< getInputPos ei
 
 single :: [a] -> Either String a
 single [x] = Right x
@@ -297,7 +375,7 @@ connectLine' :: ElementIdable eid => Pos -> eid -> DiagramMapM ()
 connectLine' p1 eidg = do
 	p2 <- outputLinePos <$> getElementPos eidg
 	ps <- connectLineGen p1 p2
-	addElementOutputPos (elementId eidg) ps
+	addElementOutputPos (elementId' eidg) ps
 
 connectLineGen :: Pos -> [Pos] -> DiagramMapM [Pos]
 connectLineGen p1 p2 = do
@@ -306,8 +384,8 @@ connectLineGen p1 p2 = do
 		l = layout dm
 	ps <- lift $ maybe (Left $ emsg dm) Right $ astar DiagramMapAStar {
 		startLine = p1, endLine = p2, diagramMapA = dm }
-	l' <- lift $ insertLine ps l
+	l' <- lift $ insertLine (processPos ps) l
 	put stt { diagramMap = dm { layout = l' } }
-	(\(Pos x y) -> updatePlace x y) `mapM_` ps
-	return ps
+	(\(Pos x y) -> updatePlace x y) `mapM_` processPos ps
+	return $ processPos ps
 	where emsg = ("astar: no route: " ++) . show

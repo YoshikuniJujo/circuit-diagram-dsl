@@ -63,3 +63,57 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - circuit-diagram-dsl
+  tryAndAnd:
+    main:                tryAndAnd.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - circuit-diagram-dsl
+  tryNorGate:
+    main:                tryNorGate.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - circuit-diagram-dsl
+  tryHLine:
+    main:                tryHLine.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - circuit-diagram-dsl
+  tryCrossBug:
+    main:                tryCrossBug.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - circuit-diagram-dsl
+  tryTriGate:
+    main:                tryTriGate.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - circuit-diagram-dsl
+  tryBlockMore:
+    main:                tryBlockMore.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - circuit-diagram-dsl

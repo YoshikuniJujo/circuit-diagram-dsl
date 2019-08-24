@@ -1,13 +1,13 @@
 {-# OPTIONS_GHC -Wall -fno-warn-tabs #-}
 
-module Circuit.Diagram.Draw (drawDiagram) where
+module Circuit.Diagram.Draw.Draw (drawDiagram) where
 
 import Data.Map.Strict
 import Diagrams.Prelude (Diagram, moveTo, (^&), (===))
 import Diagrams.Backend.SVG
 
 import Circuit.Diagram.DiagramMap
-import Circuit.Diagram.Pictures
+import Circuit.Diagram.Draw.Pictures
 
 drawDiagram :: DiagramMap -> Diagram B
 drawDiagram DiagramMap { width = w, height = h, layout = l } = mconcat
@@ -21,11 +21,12 @@ drawElement :: ElementDiagram -> Diagram B
 drawElement AndGateE = andGateD
 drawElement OrGateE = orGateD
 drawElement NotGateE = notGateD
-drawElement TriGateE = triGateD
+drawElement (TriGateE t1 t2) = triGateD t1 t2
 drawElement (ConstGateE bs) = constGateD bs
 drawElement (DelayE d) = delayD d
 drawElement HLine = hlineD
 drawElement EndHLine = hlineD
+drawElement EndHLineR = hlineD
 drawElement (HLineText t1 t2) = hlineTextD t1 t2
 drawElement VLine = vlineD
 drawElement Stump = mempty
@@ -41,5 +42,6 @@ drawElement TLeft = tlshapeD
 drawElement TRight = trshapeD
 drawElement Cross = crossD
 drawElement CrossDot = crossDotD
-drawElement BranchE = tshapeD === topLeftD
-drawElement e = error $ "Circuit.Diagram.Draw.drawElement: not yet implemented: " ++ show e
+drawElement BranchE = tshapeD === vlineD === vlineD === topLeftD
+drawElement (BlockE is os t) = blockD is os t
+-- drawElement e = error $ "Circuit.Diagram.Draw.drawElement: not yet implemented: " ++ show e
