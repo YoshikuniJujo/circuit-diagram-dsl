@@ -312,6 +312,7 @@ distance1 (Pos x y) (Pos x' y') = fromIntegral $ abs (x - x') + abs (y - y')
 
 instance AStar DiagramMapAStar where
 	type AStarNode DiagramMapAStar = Pos
+	type AStarDist DiagramMapAStar = Word
 	startNode = startLine
 	isEndNode = flip elem . endLine
 	nextNodes = nextPosDiagramMap
