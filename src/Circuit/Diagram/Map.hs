@@ -36,7 +36,7 @@ import qualified Circuit.Diagram.DiagramMap as DM
 
 andGateD, orGateD, notGateD, hLineD, branchD :: ElementDiagram
 [andGateD, orGateD, notGateD, hLineD, branchD] =
-	[AndGateE, OrGateE, NotGateE, GoalHLine, BranchE]
+	[AndGateE, OrGateE, NotGateE, HLine, BranchE]
 
 triGateD :: String -> String -> ElementDiagram
 triGateD = TriGateE
@@ -200,7 +200,7 @@ putElementGen b eids e x_ my_ = do
 	x = x_ + length eids - 1
 
 putMoreLine :: Int -> Int -> Pos -> DiagramMapM ()
-putMoreLine _ n _ | n < 0 = return ()
+putMoreLine _ n _ | n < 1 = return ()
 putMoreLine m n (Pos x y) = do
 	mapM_ (\dx -> putE (Pos (x - dx - 1) (y + n)) HLine) [0 .. m - 1]
 	putMoreLine m (n - 1) (Pos x y)
