@@ -31,6 +31,7 @@ data ElementDiagram
 	| TopLeft | TopRight | BottomLeft | BottomRight
 	| EndHLine | EndHLineR | EndTopLeft
 	| EndBottomLeft
+	| GoalHLine
 	| TShape | TInverted | TLeft | TRight | CrossDot | Cross
 	| HLineText String String
 	| BlockE Int Int String
@@ -143,6 +144,10 @@ overlapLine TShape EndTopLeft = CrossDot
 overlapLine TLeft HLine = HLineText "boo" "boo"
 overlapLine EndTopLeft EndBottomLeft = TRight
 overlapLine TLeft EndHLineR = CrossDot
+overlapLine GoalHLine EndTopLeft = TopLeft
+overlapLine GoalHLine EndBottomLeft = BottomLeft
+overlapLine GoalHLine EndHLine = HLine
+overlapLine GoalHLine VLine = Cross
 overlapLine ln ln' = error
 	$ "Circut.Diagram.Map.overlapLine: not yet implemented: overlapLine " ++
 		show ln ++ " " ++ show ln'

@@ -36,7 +36,7 @@ import qualified Circuit.Diagram.DiagramMap as DM
 
 andGateD, orGateD, notGateD, hLineD, branchD :: ElementDiagram
 [andGateD, orGateD, notGateD, hLineD, branchD] =
-	[AndGateE, OrGateE, NotGateE, HLine, BranchE]
+	[AndGateE, OrGateE, NotGateE, GoalHLine, BranchE]
 
 triGateD :: String -> String -> ElementDiagram
 triGateD = TriGateE
