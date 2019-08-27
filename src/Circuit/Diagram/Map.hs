@@ -200,15 +200,15 @@ putElementGen b eids e x_ my_ = do
 	x = x_ + length eids - 1
 
 putMoreLine :: Int -> Int -> Pos -> DiagramMapM ()
-putMoreLine _ n _ | n < 1 = return ()
+putMoreLine _ n _ | n < 0 = return ()
 putMoreLine m n (Pos x y) = do
-	mapM_ (\dx -> putE (Pos (x - dx - 1) (y + n)) HLine) [0 .. m - 1]
+	mapM_ (\dx -> putE (Pos (x - dx - 1) (y + n)) HLine) [0 .. m - 2]
 	putMoreLine m (n - 1) (Pos x y)
 
 putEnd :: Int -> Int -> Pos -> DiagramMapM ()
 putEnd _ n _ | n < 0 = return ()
 putEnd m n (Pos x y) = do
-	mapM_ (\dx -> putE (Pos (x - dx - 1) (y + n)) HLine) [m]
+	mapM_ (\dx -> putE (Pos (x - dx - 1) (y + n)) HLine) [m - 1, m]
 	putEnd m (n - 1) (Pos x y)
 
 updatePlaceAndExpand :: Pos -> ElementDiagram -> DiagramMapM ()
@@ -296,7 +296,7 @@ linePos BranchE (Pos x y) =
 		inputLinePos = [Pos (x + 1) y, Pos (x + 1) (y + 3)] }
 linePos (BlockE is os _) (Pos x y) =
 	Right LinePos {
-		outputLinePos = (`Pos` y) <$> [x - os - 1 .. x - 1],
+		outputLinePos = (`Pos` y) <$> [x - os .. x - 1],
 		inputLinePos = Pos (x + 2) <$> [y, y + 2 .. y + (is - 1) * 2] }
 linePos e pos = Left $ "linePos " ++ show e ++ " " ++ show pos
 
